@@ -94,6 +94,7 @@ bool CCECAdapterMessageQueueEntry::Wait(uint32_t iTimeout)
 {
   bool bReturn(false);
   /* wait until we receive a signal when the tranmission succeeded */
+  //printf(">>>> arived CCECAdapterMessageQueueEntry::Wait iTimeout = %i \n", iTimeout);
   {
     CLockObject lock(m_mutex);
     bReturn = m_bSucceeded ? true : m_condition.Wait(m_mutex, m_bSucceeded, iTimeout);
@@ -420,15 +421,19 @@ bool CCECAdapterMessageQueue::Write(CCECAdapterMessage *msg)
 {
   msg->state = ADAPTER_MESSAGE_STATE_WAITING_TO_BE_SENT;
 
+  //printf(">>>> arrived CCECAdapterMessageQueue::Write #1 <<<< \n");
+
   /* set the correct line timeout */
   if (msg->IsTranmission())
   {
+    //printf(">>>> arrived CCECAdapterMessageQueue::Write #2 <<<< \n");
     m_com->SetLineTimeout(msg->lineTimeout);
   }
 
   CCECAdapterMessageQueueEntry *entry = new CCECAdapterMessageQueueEntry(this, msg);
   if (!entry)
   {
+    //printf(">>>> arrived CCECAdapterMessageQueue::Write #3 <<<< \n");
     m_com->m_callback->GetLib()->AddLog(CEC_LOG_ERROR, "couldn't create queue entry for '%s'", CCECAdapterMessage::ToString(msg->Message()));
     msg->state = ADAPTER_MESSAGE_STATE_ERROR;
     return false;
@@ -438,10 +443,13 @@ bool CCECAdapterMessageQueue::Write(CCECAdapterMessage *msg)
   /* add to the wait for ack queue */
   if (msg->Message() != MSGCODE_START_BOOTLOADER)
   {
+    //printf(">>>> arrived CCECAdapterMessageQueue::Write #4 <<<< \n");
     CLockObject lock(m_mutex);
     iEntryId = m_iNextMessage++;
     m_messages.insert(std::make_pair(iEntryId, entry));
   }
+
+  //printf(">>>> arrived CCECAdapterMessageQueue::Write #4.1 <<<< \n");
 
   /* add the message to the write queue */
   m_writeQueue.Push(entry);
@@ -449,8 +457,10 @@ bool CCECAdapterMessageQueue::Write(CCECAdapterMessage *msg)
   bool bReturn(true);
   if (!msg->bFireAndForget)
   {
+    //printf(">>>> arrived CCECAdapterMessageQueue::Write #5 <<<< \n");
     if (!entry->Wait(msg->transmit_timeout <= 5 ? CEC_DEFAULT_TRANSMIT_WAIT : msg->transmit_timeout))
     {
+      //printf(">>>> arrived CCECAdapterMessageQueue::Write #6 <<<< \n");
       m_com->m_callback->GetLib()->AddLog(CEC_LOG_DEBUG, "command '%s' was not acked by the controller", CCECAdapterMessage::ToString(msg->Message()));
       msg->state = ADAPTER_MESSAGE_STATE_SENT_NOT_ACKED;
       bReturn = false;
@@ -458,16 +468,20 @@ bool CCECAdapterMessageQueue::Write(CCECAdapterMessage *msg)
 
     if (msg->Message() != MSGCODE_START_BOOTLOADER)
     {
+      //printf(">>>> arrived CCECAdapterMessageQueue::Write #7 <<<< \n");
       CLockObject lock(m_mutex);
       m_messages.erase(iEntryId);
     }
 
     if (msg->ReplyIsError() && msg->state != ADAPTER_MESSAGE_STATE_SENT_NOT_ACKED)
+    {
+      //printf(">>>> arrived CCECAdapterMessageQueue::Write #8 <<<< \n");
       msg->state = ADAPTER_MESSAGE_STATE_ERROR;
+    }
 
     delete entry;
   }
-
+  //printf(">>>> arrived CCECAdapterMessageQueue::Write #9  bReturn = %i <<<< \n", bReturn);
   return bReturn;
 }
 

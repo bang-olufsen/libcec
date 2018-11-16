@@ -83,16 +83,49 @@ namespace CEC
     virtual bool TransmitMenuState(const cec_logical_address iInitiator, const cec_logical_address iDestination, cec_menu_state menuState, bool bIsReply);
     virtual bool TransmitOSDName(const cec_logical_address iInitiator, const cec_logical_address iDestination, std::string strDeviceName, bool bIsReply);
     virtual bool TransmitOSDString(const cec_logical_address iInitiator, const cec_logical_address iDestination, cec_display_control duration, const char *strMessage, bool bIsReply);
+    virtual bool TransmitArcStartEnd(const cec_logical_address iInitiator, const cec_logical_address iDestination, bool bWaitForResponse, int startOrEnd);
     virtual bool TransmitPhysicalAddress(const cec_logical_address iInitiator, uint16_t iPhysicalAddress, cec_device_type type, bool bIsReply);
     virtual bool TransmitSetMenuLanguage(const cec_logical_address iInitiator, const char lang[4], bool bIsReply);
     virtual bool TransmitPoll(const cec_logical_address iInitiator, const cec_logical_address iDestination, bool bIsReply);
     virtual bool TransmitPowerState(const cec_logical_address iInitiator, const cec_logical_address iDestination, cec_power_status state, bool bIsReply);
     virtual bool TransmitVendorID(const cec_logical_address iInitiator, const cec_logical_address iDestination, uint64_t iVendorId, bool bIsReply);
+
+    //HIB    
+    virtual bool TransmitRequestSystemAudioModeStatus(const cec_logical_address iInitiator, const cec_logical_address iDestination, bool bWaitForResponse);
+    //HIB
+    virtual bool TransmitRequestTestRequestAudioDescriptor(const cec_logical_address iInitiator, const cec_logical_address iDestination, uint8_t iAudioFormatIdCode, bool bWaitForResponse);
+    //HIB    
+    virtual bool TransmitRequestTestSystemAudioModeRequest(const cec_logical_address iInitiator, const cec_logical_address iDestination, uint16_t iPhysicalAddress, bool bAdPhysicalAddress, bool bWaitForResponse);
+    //HIB    
+    virtual bool TransmitRequestTestRequestArcTermination(const cec_logical_address iInitiator, const cec_logical_address iDestination, bool bWaitForResponse);
+    //HIB    
+    virtual bool TransmitRequestTestRequestArcInitiation(const cec_logical_address iInitiator, const cec_logical_address iDestination, bool bWaitForResponse);
+    //HIB
+    virtual bool TransmitRequestTestReportArcTerminated(const cec_logical_address iInitiator, const cec_logical_address iDestination, bool bWaitForResponse);
+    //HIB
+    virtual bool TransmitRequestTestReportArcInitiated(const cec_logical_address iInitiator, const cec_logical_address iDestination, bool bWaitForResponse);
+    //HIB
+    virtual bool TransmitRequestTestRequestArcInitiationWrongParam(const cec_logical_address iInitiator, const cec_logical_address iDestination, uint16_t iWrongParam, bool bWaitForResponse);
+    //HIB
+    virtual bool TransmitRequestUnsupportedOpcode(const cec_logical_address iInitiator, const cec_logical_address iDestination, cec_opcode opcode, bool bWaitForResponse);
+    //HIB
+    virtual bool TransmitRequestStandby(const cec_logical_address iInitiator, const cec_logical_address iDestination, uint8_t initDest, bool bWaitForResponse);
+    //HIB
+    virtual bool TransmitRequestTestSetStreamPath(const cec_logical_address iInitiator, const cec_logical_address iDestination, uint16_t iPhysicalAddress, bool bWaitForResponse);
+    //HIB
+    virtual bool TransmitRequestTestRoutingChange(const cec_logical_address iInitiator, const cec_logical_address iDestination, uint16_t iPhysAddrOriginal, uint16_t iPhysAddrNew, bool bWaitForResponse);
+    //HIB
+    virtual bool TransmitRequestTestRoutingInformation(const cec_logical_address iInitiator, const cec_logical_address iDestination, uint16_t iPhysAddr, bool bWaitForResponse);
+
     virtual bool TransmitAudioStatus(const cec_logical_address iInitiator, const cec_logical_address iDestination, uint8_t state, bool bIsReply);
     virtual bool TransmitSetSystemAudioMode(const cec_logical_address iInitiator, const cec_logical_address iDestination, cec_system_audio_status state, bool bIsReply);
     virtual bool TransmitSystemAudioModeStatus(const cec_logical_address iInitiator, const cec_logical_address iDestination, cec_system_audio_status state, bool bIsReply);
     virtual bool TransmitDeckStatus(const cec_logical_address iInitiator, const cec_logical_address iDestination, cec_deck_info state, bool bIsReply);
     virtual bool TransmitKeypress(const cec_logical_address iInitiator, const cec_logical_address iDestination, cec_user_control_code key, bool bWait = true);
+
+    //HIB
+    virtual bool TransmitKeypressWrongParam(const cec_logical_address iInitiator, const cec_logical_address iDestination, cec_user_control_code key, uint8_t iWrongParam, bool bNoParam = true, bool bWait = true);
+
     virtual bool TransmitKeyRelease(const cec_logical_address iInitiator, const cec_logical_address iDestination, bool bWait = true);
     virtual bool TransmitSystemAudioModeRequest(const cec_logical_address iInitiator, uint16_t iPhysicalAddress);
     virtual bool TransmitSetStreamPath(uint16_t iStreamPath, bool bIsReply);
@@ -142,6 +175,23 @@ namespace CEC
     virtual int HandleVendorCommand(const cec_command &command);
     virtual int HandleVendorRemoteButtonDown(const cec_command& command);
     virtual int HandleVendorRemoteButtonUp(const cec_command& command) { return HandleUserControlRelease(command); }
+    //HDMI-ARC methods
+    virtual int HandleReportArcStarted(const cec_command& command);
+    virtual int HandleReportArcEnded(const cec_command& command);
+    virtual int HandleRequestArcStart(const cec_command& command);
+    virtual int HandleRequestArcEnd(const cec_command& command);
+    //HIB
+    virtual int HandleEndArc(const cec_command& command);
+    //HIB
+    virtual int HandleStartArc(const cec_command& command);
+    //HIB
+    virtual int HandleReportShortAudioDescriptor(const cec_command &command);
+    //HIB
+    virtual int HandleReportShortAudioDescriptorUS(const cec_command &command);
+    
+    //HIB just for debug
+    //virtual int HandleRecordOff(const cec_command& command);
+
     virtual void UnhandledCommand(const cec_command &command, const cec_abort_reason reason);
     virtual void RequestEmailFromCustomer(const cec_command& command);
 
@@ -155,6 +205,17 @@ namespace CEC
     virtual void SetPhysicalAddress(cec_logical_address iAddress, uint16_t iNewAddress);
 
     virtual bool Transmit(cec_command &command, bool bSuppressWait, bool bIsReply);
+
+    //HIB
+    virtual bool TransmitTestFeatureAbort(cec_command &command, bool bSuppressWait, bool bIsReply);
+    //HIB
+    virtual bool TransmitTestStandby(cec_command &command, bool bSuppressWait, bool bIsReply);
+    //HIB
+    virtual bool SetFeatureAbortReason(cec_logical_address initiator, uint8_t unsupportedOpcode, uint8_t reason);
+    //HIB
+    virtual bool SetActiveSourceResponse(cec_logical_address initiator, uint16_t response);
+    //HIB
+    virtual bool SetRoutingInformationResponse(cec_logical_address initiator, uint16_t response);
 
     virtual bool SourceSwitchAllowed(void) { return true; }
 

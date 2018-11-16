@@ -174,6 +174,8 @@ namespace CEC
      */
     virtual bool SetOSDString(cec_logical_address iLogicalAddress, cec_display_control duration, const char *strMessage) = 0;
 
+    virtual bool SendArcStart(cec_logical_address iLogicalAddress, int startOrEnd) = 0;
+
     /*!
      * @brief Enable or disable monitoring mode, for debugging purposes. If monitoring mode is enabled, libCEC won't respond to any command, but only log incoming data.
      * @param bEnable True to enable, false to disable.
@@ -202,6 +204,48 @@ namespace CEC
      * @return The vendor ID or 0 if it wasn't found.
      */
     virtual uint32_t GetDeviceVendorId(cec_logical_address iLogicalAddress) = 0;
+
+    //HIB
+    virtual uint8_t GetDeviceSystemAudioModeStatus(const cec_logical_address iAddress) = 0;
+
+    //HIB
+    virtual uint8_t GetDeviceAudioStatus(const cec_logical_address iAddress) = 0;
+
+    //HIB
+    virtual uint32_t DeviceRequestAudioDescriptor(const cec_logical_address iAddress, const uint8_t iAudioFormatIdCode) = 0;
+
+    //HIB
+    virtual uint8_t DeviceSystemAudioModeRequest(const cec_logical_address iAddress, uint16_t iPhysicalAddress, bool bAddPhysicalAddress) = 0;
+
+    //HIB
+    virtual uint8_t DeviceRequestArcTermination(const cec_logical_address iAddress) = 0;
+
+    //HIB
+    virtual uint8_t DeviceRequestArcInitiation(const cec_logical_address iAddress) = 0;
+
+    //HIB
+    virtual bool DeviceReportArcTerminated(const cec_logical_address iAddress) = 0;
+    
+    //HIB
+    virtual bool DeviceReportArcInitiated(const cec_logical_address iAddress) = 0;
+    
+    //HIB
+    virtual uint8_t DeviceRequestArcInitiationWrongParam(const cec_logical_address iAddress, uint16_t iWrongParam) = 0;
+
+    //HIB
+    virtual uint8_t DeviceUnsupportedOpcode(const cec_logical_address iAddress, cec_opcode opcode) = 0;
+
+    //HIB
+    virtual uint8_t DeviceStandby(const cec_logical_address iAddress, uint8_t initDest) = 0;
+
+    //HIB
+    virtual uint16_t DeviceSetStreamPath(const cec_logical_address iAddress, const uint16_t iPhysicalAddress, const bool bUsePhysicalAddress) = 0;
+
+    //HIB
+    virtual uint16_t DeviceRoutingChange(const cec_logical_address iAddress, const uint16_t iPhysicalAddressOriginal, const uint16_t iPhysicalAddressNew) = 0;
+
+    //HIB
+    virtual uint16_t DeviceRoutingInformation(const cec_logical_address iAddress, const uint16_t iPhysicalAddress) = 0;
 
     /*!
      * @brief Get the power status of the device with the given logical address.
@@ -266,6 +310,9 @@ namespace CEC
      * @return True when the keypress was acked, false otherwise.
      */
     virtual bool SendKeypress(cec_logical_address iDestination, cec_user_control_code key, bool bWait = false) = 0;
+
+    //HIB
+    virtual bool SendKeypressWrongParam(cec_logical_address iDestination, cec_user_control_code key, uint8_t iWrongParam, bool NoParam, bool bWait = false) = 0;
 
     /*!
      * @brief Send a key release to a device on the CEC bus.
@@ -416,6 +463,12 @@ namespace CEC
     virtual const char* ToString(const cec_deck_info status) = 0;
     virtual const char* ToString(const cec_opcode opcode) = 0;
     virtual const char* ToString(const cec_system_audio_status mode) = 0;
+    
+    //HIB
+    virtual const char* ToString(const cec_arc_status status) = 0;
+    //HIB
+
+
     virtual const char* ToString(const cec_audio_status status) = 0;
     virtual const char* ToString(const cec_vendor_id vendor) { return VendorIdToString((uint32_t)vendor); }
     virtual const char* ToString(const cec_device_type type) = 0;

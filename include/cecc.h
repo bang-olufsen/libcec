@@ -117,6 +117,10 @@ extern DECLSPEC void libcec_deck_control_mode_to_string(const CEC_NAMESPACE cec_
 extern DECLSPEC void libcec_deck_status_to_string(const CEC_NAMESPACE cec_deck_info status, char* buf, size_t bufsize);
 extern DECLSPEC void libcec_opcode_to_string(const CEC_NAMESPACE cec_opcode opcode, char* buf, size_t bufsize);
 extern DECLSPEC void libcec_system_audio_status_to_string(const CEC_NAMESPACE cec_system_audio_status mode, char* buf, size_t bufsize);
+
+//HIB
+extern DECLSPEC void libcec_arc_status_to_string(const CEC_NAMESPACE cec_arc_status status, char* buf, size_t bufsize);
+
 extern DECLSPEC void libcec_audio_status_to_string(const CEC_NAMESPACE cec_audio_status status, char* buf, size_t bufsize);
 extern DECLSPEC void libcec_vendor_id_to_string(const CEC_NAMESPACE cec_vendor_id vendor, char* buf, size_t bufsize);
 extern DECLSPEC void libcec_user_control_key_to_string(const CEC_NAMESPACE cec_user_control_code key, char* buf, size_t bufsize);

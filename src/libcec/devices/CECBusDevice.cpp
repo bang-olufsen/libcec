@@ -73,6 +73,7 @@ CResponse::~CResponse(void)
 
 bool CResponse::Wait(uint32_t iTimeout)
 {
+  //printf(">>>> arrived CResponse::Wait iTimeout = %i <<<< \n", iTimeout);
   return m_event.Wait(iTimeout);
 }
 
@@ -104,6 +105,7 @@ void CWaitForResponse::Clear()
 bool CWaitForResponse::Wait(cec_opcode opcode, uint32_t iTimeout)
 {
   CResponse *response = GetEvent(opcode);
+  //printf(">>>> arrived CWaitForResponse::Wait <<<<  timeout %i \n", iTimeout);
   return response ? response->Wait(iTimeout) : false;
 }
 
@@ -118,6 +120,7 @@ CResponse* CWaitForResponse::GetEvent(cec_opcode opcode)
 {
   CResponse *retVal(NULL);
   {
+    //printf(">>>> arrived CWaitForResponse::GetEvent opcode = %i \n", opcode);
     P8PLATFORM::CLockObject lock(m_mutex);
     std::map<cec_opcode, CResponse*>::iterator it = m_waitingFor.find(opcode);
     if (it != m_waitingFor.end())
@@ -302,12 +305,15 @@ bool CCECBusDevice::IsPresent(void)
 bool CCECBusDevice::IsHandledByLibCEC(void)
 {
   CLockObject lock(m_mutex);
+  //printf(">>>> arrived 4000 <<<< \n");
   return m_deviceStatus == CEC_DEVICE_STATUS_HANDLED_BY_LIBCEC;
 }
 
 void CCECBusDevice::SetUnsupportedFeature(cec_opcode opcode)
 {
-  // some commands should never be marked as unsupported
+  //printf(">>>> arrived CCECBusDevice::SetUnsuportedFeature <<<< \n");
+  
+  // some commands should never be marked as unsupported 
   if (opcode == CEC_OPCODE_VENDOR_COMMAND ||
       opcode == CEC_OPCODE_VENDOR_COMMAND_WITH_ID ||
       opcode == CEC_OPCODE_VENDOR_REMOTE_BUTTON_DOWN ||
@@ -351,6 +357,15 @@ bool CCECBusDevice::TransmitKeypress(const cec_logical_address initiator, cec_us
   return bReturn;
 }
 
+//HIB
+bool CCECBusDevice::TransmitKeypressWrongParam(const cec_logical_address initiator, cec_user_control_code key, uint8_t iWrongParam, bool bNoParam, bool bWait /* = true */)
+{
+  MarkBusy();
+  bool bReturn = m_handler->TransmitKeypressWrongParam(initiator, m_iLogicalAddress, key, iWrongParam, bNoParam, bWait);
+  MarkReady();
+  return bReturn;
+}
+
 bool CCECBusDevice::TransmitKeyRelease(const cec_logical_address initiator, bool bWait /* = true */)
 {
   MarkBusy();
@@ -368,12 +383,14 @@ cec_version CCECBusDevice::GetCecVersion(const cec_logical_address initiator, bo
     bRequestUpdate = bIsPresent &&
         (bUpdate || m_cecVersion == CEC_VERSION_UNKNOWN);
   }
+  
+  //printf(">>>> arrived CCECBusDevice::GetCecVersion <<<< \n ");
 
-  if (bRequestUpdate)
-  {
+  //if (bRequestUpdate)
+  //{
     CheckVendorIdRequested(initiator);
     RequestCecVersion(initiator);
-  }
+  //}
 
   CLockObject lock(m_mutex);
   return m_cecVersion;
@@ -394,6 +411,7 @@ bool CCECBusDevice::RequestCecVersion(const cec_logical_address initiator, bool 
   if (!IsHandledByLibCEC() &&
       !IsUnsupportedFeature(CEC_OPCODE_GET_CEC_VERSION))
   {
+    //printf(">>>> arrived CCECBusDevice::RequestCecVersion <<<< \n ");
     MarkBusy();
     LIB_CEC->AddLog(CEC_LOG_DEBUG, "<< requesting CEC version of '%s' (%X)", GetLogicalAddressName(), m_iLogicalAddress);
     bReturn = m_handler->TransmitRequestCecVersion(initiator, m_iLogicalAddress, bWaitForResponse);
@@ -518,6 +536,18 @@ bool CCECBusDevice::TransmitOSDString(const cec_logical_address destination, cec
   return bReturn;
 }
 
+bool CCECBusDevice::TransmitArcStartEnd(const cec_logical_address destination, int startOrEnd)
+{
+  bool bReturn(false);
+  //printf(">>>> arrived C224 <<<< \n");
+  LIB_CEC->AddLog(CEC_LOG_WARNING, "<< %s (%X) -> %s (%X): TransmitArcStart param(%d)", GetLogicalAddressName(), m_iLogicalAddress, ToString(destination), destination, startOrEnd);
+  MarkBusy();
+  bReturn = m_handler->TransmitArcStartEnd(m_iLogicalAddress, destination, true, startOrEnd);
+  MarkReady();
+
+  return bReturn;
+}
+
 std::string CCECBusDevice::GetCurrentOSDName(void)
 {
   CLockObject lock(m_mutex);
@@ -535,11 +565,11 @@ std::string CCECBusDevice::GetOSDName(const cec_logical_address initiator, bool 
         m_type != CEC_DEVICE_TYPE_TV;
   }
 
-  if (bRequestUpdate)
-  {
+  //if (bRequestUpdate)
+  //{
     CheckVendorIdRequested(initiator);
     RequestOSDName(initiator);
-  }
+  //}
 
   CLockObject lock(m_mutex);
   return m_strDeviceName;
@@ -599,6 +629,7 @@ uint16_t CCECBusDevice::GetCurrentPhysicalAddress(void)
 
 uint16_t CCECBusDevice::GetPhysicalAddress(const cec_logical_address initiator, bool bSuppressUpdate /* = false */)
 {
+  //printf(">>>> arrived CCECBusDevice::GetPhysicalAddress #1 m_iPhysicalAddress = %i <<<< \n",m_iPhysicalAddress);
   if (!bSuppressUpdate)
   {
     bool bIsPresent(GetStatus() == CEC_DEVICE_STATUS_PRESENT);
@@ -607,16 +638,24 @@ uint16_t CCECBusDevice::GetPhysicalAddress(const cec_logical_address initiator, 
       CLockObject lock(m_mutex);
       bRequestUpdate = bIsPresent && m_iPhysicalAddress == CEC_INVALID_PHYSICAL_ADDRESS;
     }
+    //printf(">>>> arrived CCECBusDevice::GetPhysicalAddress #2 <<<< \n");
 
-    if (bRequestUpdate)
-    {
+
+    //if (bRequestUpdate)
+    //{
       CheckVendorIdRequested(initiator);
       if (!RequestPhysicalAddress(initiator))
+      {
+        //printf(">>>> arrived CCECBusDevice::GetPhysicalAddress #3 Failed! <<<< \n");
         LIB_CEC->AddLog(CEC_LOG_ERROR, "failed to request the physical address");
-    }
+      }
+    //}
   }
 
   CLockObject lock(m_mutex);
+  //printf(">>>> arrived CCECBusDevice::GetPhysicalAddress #4 <<<< \n");
+  //printf(">>>> initiator          = %i \n",initiator);
+  //printf(">>>> m_iPhysicalAddress = %i \n",m_iPhysicalAddress);
   return m_iPhysicalAddress;
 }
 
@@ -634,7 +673,7 @@ bool CCECBusDevice::SetPhysicalAddress(uint16_t iNewAddress)
 bool CCECBusDevice::RequestPhysicalAddress(const cec_logical_address initiator, bool bWaitForResponse /* = true */)
 {
   bool bReturn(false);
-
+   
   if (!IsHandledByLibCEC())
   {
     MarkBusy();
@@ -771,7 +810,7 @@ cec_vendor_id CCECBusDevice::GetVendorId(const cec_logical_address initiator, bo
         (bUpdate || m_vendor == CEC_VENDOR_UNKNOWN));
   }
 
-  if (bRequestUpdate)
+  //if (bRequestUpdate)
     RequestVendorId(initiator);
 
   CLockObject lock(m_mutex);
@@ -944,6 +983,9 @@ void CCECBusDevice::ResetDeviceStatus(bool bClientUnregistered /* = false */)
 bool CCECBusDevice::TransmitPoll(const cec_logical_address dest, bool bUpdateDeviceStatus)
 {
   bool bReturn(false);
+
+  //printf(">>>> arrived CCEBusDevice::TransmitPoll #1 <<<< \n");
+
   cec_logical_address destination(dest);
   if (destination == CECDEVICE_UNKNOWN)
     destination = m_iLogicalAddress;
@@ -1051,15 +1093,16 @@ bool CCECBusDevice::ActivateSource(uint64_t iDelay /* = 0 */)
 bool CCECBusDevice::RequestActiveSource(bool bWaitForResponse /* = true */)
 {
   bool bReturn(false);
-
-  if (IsHandledByLibCEC())
-  {
+  //printf(">>>> arrived 800 <<<< \n");
+  //HIB if (IsHandledByLibCEC())
+  //{
+    //printf(">>>> arrived 800.1 <<<< \n");
     MarkBusy();
     LIB_CEC->AddLog(CEC_LOG_DEBUG, "<< requesting active source");
 
     bReturn = m_handler->TransmitRequestActiveSource(m_iLogicalAddress, bWaitForResponse);
     MarkReady();
-  }
+  //}
   return bReturn;
 }
 
@@ -1130,7 +1173,7 @@ bool CCECBusDevice::TransmitActiveSource(bool bIsReply)
 {
   bool bSendActiveSource(false);
   uint16_t iPhysicalAddress(CEC_INVALID_PHYSICAL_ADDRESS);
-
+  //printf(">>>> arrived CCECBusDevice::TransmitActiveSource <<<< \n");
   {
     CLockObject lock(m_mutex);
     if (!HasValidPhysicalAddress())
@@ -1239,35 +1282,51 @@ void CCECBusDevice::SetActiveRoute(uint16_t iRoute)
 
 void CCECBusDevice::SetStreamPath(uint16_t iNewAddress, uint16_t iOldAddress /* = CEC_INVALID_PHYSICAL_ADDRESS */)
 {
+  //printf(">>>> CCECBusDevice::SetStreamPath <<<< #1 \n");
   if (iNewAddress != CEC_INVALID_PHYSICAL_ADDRESS)
+  {
+    //printf(">>>> CCECBusDevice::SetStreamPath <<<< #2 \n");
     SetPowerStatus(CEC_POWER_STATUS_ON);
+  }
 
   CLockObject lock(m_mutex);
   if (iNewAddress != m_iStreamPath)
   {
+    //printf(">>>> CCECBusDevice::SetStreamPath <<<< #3 \n");
     LIB_CEC->AddLog(CEC_LOG_DEBUG, "%s (%X): stream path changed from %04x to %04x", GetLogicalAddressName(), m_iLogicalAddress, iOldAddress == 0 ? m_iStreamPath : iOldAddress, iNewAddress);
     m_iStreamPath = iNewAddress;
   }
 
   if (!LIB_CEC->IsValidPhysicalAddress(iNewAddress))
+  {
+    //printf(">>>> CCECBusDevice::SetStreamPath <<<< #4 \n");
     return;
+  }
 
   CCECBusDevice *device = m_processor->GetDeviceByPhysicalAddress(iNewAddress);
   if (device)
   {
+    //printf(">>>> CCECBusDevice::SetStreamPath <<<< #5 \n");
     // if a device is found with the new physical address, mark it as active, which will automatically mark all other devices as inactive
     device->MarkAsActiveSource();
 
     // respond with an active source message if this device is handled by libCEC
     if (device->IsHandledByLibCEC())
+    {
+      //printf(">>>> CCECBusDevice::SetStreamPath <<<< #6 \n");
       device->TransmitActiveSource(true);
+    }  
   }
   else
   {
+    //printf(">>>> CCECBusDevice::SetStreamPath <<<< #7 \n");
     // try to find the device with the old address, and mark it as inactive when found
     device = m_processor->GetDeviceByPhysicalAddress(iOldAddress);
     if (device)
+    {
+      //printf(">>>> CCECBusDevice::SetStreamPath <<<< #8 \n");    
       device->MarkAsInactiveSource();
+    }
   }
 }
 
@@ -1481,13 +1540,296 @@ void CCECBusDevice::SignalOpcode(cec_opcode opcode)
 
 bool CCECBusDevice::WaitForOpcode(cec_opcode opcode)
 {
+  //printf(">>>> arrived CCECBusDevice::WaitForOpcode %i <<<< \n", opcode);
   return m_waitForResponse->Wait(opcode);
 }
 
 bool CCECBusDevice::SystemAudioModeRequest(void)
 {
   uint16_t iPhysicalAddress(GetCurrentPhysicalAddress());
+  //printf(">>>> arrived B223 <<<< CCECBusDevice::SystemAudioModeRequest \n");
   return iPhysicalAddress != CEC_INVALID_PHYSICAL_ADDRESS && !!m_handler ?
       m_handler->TransmitSystemAudioModeRequest(m_iLogicalAddress, iPhysicalAddress) :
       false;
+}
+
+
+//HIB
+void CCECBusDevice::SetFeatureAbortStatus(uint8_t unsupportedOpcode, uint8_t FAStatus)
+{
+  //printf(">>>> arrived CCECBusDevice::SetFeatureAbortStatus <<<< \n");
+  //printf(">>>> FAStatus       = %i \n", FAStatus);
+  //printf(">>>> m_featureAbort = %i \n", m_featureAbort);
+
+  m_featureAbortOpcode = unsupportedOpcode;
+  m_featureAbort = FAStatus;
+  return;
+}
+
+//HIB
+void CCECBusDevice::SetStandbyStatus(uint8_t FAStatus)
+{
+  //printf(">>>> arrived CCECBusDevice::SetStandbyStatus <<<< \n");
+  //printf(">>>> FAStatus       = %i \n", FAStatus);
+
+  m_standbyResponse = FAStatus;
+  return;
+}
+
+//HIB
+void CCECBusDevice::SetStreamPathResponse(uint16_t StreamPathResponse)
+{
+  //printf(">>>> arrived CCECBusDevice::SetStreamPathResponse <<<< \n");
+  //printf(">>>> StreamPathResponse = %i <<<< \n", StreamPathResponse);
+  //printf(">>>> m_streamPath before = %i <<<< \n", m_streamPath);
+
+  m_streamPath = StreamPathResponse;
+
+  //printf(">>>> m_streamPath after = %i <<<< \n", m_streamPath);
+  return;
+}
+
+//HIB
+void CCECBusDevice::SetRoutingInformationResponse(uint16_t Response)
+{
+  //printf(">>>> arrived CCECBusDevice::SetStreamPathResponse <<<< \n");
+  //printf(">>>> RoutingInformationResponse  = %i <<<< \n", Response);
+  //printf(">>>> m_routingInformation before = %i <<<< \n", m_routingInformation);
+
+  m_routingInformation = Response;
+
+  //printf(">>>> m_streamPath after = %i <<<< \n", m_routingInformation);
+  return;
+}
+
+//HIB
+uint8_t CCECBusDevice::TestUnsupportedOpcode(const cec_logical_address initiator, cec_opcode opcode, bool bUpdate /* = false */)
+{
+  bool bIsPresent(GetStatus() == CEC_DEVICE_STATUS_PRESENT);
+  bool bRequestUpdate(false);
+  {
+    CLockObject lock(m_mutex);
+    bRequestUpdate = (bIsPresent &&
+        (bUpdate || m_featureAbort == CEC_FEATURE_ABORT_REASON_UNRECOGNIZED_OPCODE ||
+                    m_featureAbort == CEC_FEATURE_ABORT_REASON_NOT_IN_CORRECT_MODE_TO_RESPOND ||
+                    m_featureAbort == CEC_FEATURE_ABORT_REASON_CANNOT_PROVIDE_SOURCE ||
+                    m_featureAbort == CEC_FEATURE_ABORT_REASON_INVALID_OPERAND ||
+                    m_featureAbort == CEC_FEATURE_ABORT_REASON_REFUSED ||
+                    m_featureAbort == CEC_FEATURE_ABORT_REASON_UNABLE_TO_DETERMINE ||
+                    m_featureAbort == CEC_FEATURE_ABORT_REASON_UNKNOWN));
+  }
+
+
+  m_featureAbort = CEC_FEATURE_ABORT_REASON_UNKNOWN;
+
+  //printf(">>>> arrived CCECBusDevice::TestUnsupportedOpcode #1 <<<< \n");
+  //printf(">>>> initiator      : %i <<<< \n", initiator);
+  //printf(">>>> opcode         : %i <<<< \n", opcode);
+  //printf(">>>> m_featureAbort : %i <<<< \n", m_featureAbort);
+  
+
+  //if (bRequestUpdate)
+  //{
+    //printf(">>>> arrived CCECBusDevice::TestUnsupportedOpcode #2 m_featureAbort: %i <<<< \n", m_featureAbort);
+    RequestTestUnsupportedOpcode(initiator, opcode, bUpdate);
+    //printf(">>>> arrived CCECBusDevice::TestUnsupportedOpcode #3 m_featureAbort: %i <<<< \n", m_featureAbort);
+  //}
+
+  CLockObject lock(m_mutex);
+  return m_featureAbort;
+}
+
+//HIB
+bool CCECBusDevice::RequestTestUnsupportedOpcode(const cec_logical_address initiator, cec_opcode opcode, bool bWaitForResponse /* = true */)
+{
+  bool bReturn(false);
+  //printf(">>>> arrived CCECBusDevice::RequestTestUnsupportedOpcode #1 <<<< \n");
+  MarkBusy();
+  bReturn = m_handler->TransmitRequestUnsupportedOpcode(initiator, m_iLogicalAddress, opcode, bWaitForResponse);
+  MarkReady();
+  //printf(">>>> arrived CCECBusDevice::RequestTestUnsupportedOpcode #2 bReturn = %i <<<< \n", bReturn);
+  return bReturn;
+}
+
+//HIB
+uint8_t CCECBusDevice::TestStandby(const cec_logical_address initiator, uint8_t initDest, bool bUpdate /* = false */)
+{
+  bool bIsPresent(GetStatus() == CEC_DEVICE_STATUS_PRESENT);
+  bool bRequestUpdate(false);
+  {
+    CLockObject lock(m_mutex);
+    bRequestUpdate = (bIsPresent &&
+        (bUpdate || m_standbyResponse == 0x5F));
+  }
+
+  m_standbyResponse = 0xFF;
+
+  //printf(">>>> arrived CCECBusDevice::TestStandby #1 <<<< \n");
+  //printf(">>>> initiator      : %i <<<< \n", initiator);
+  //printf(">>>> initDest         : %i <<<< \n", initDest);
+  //printf(">>>> m_standbyResponse : %i <<<< \n", m_standbyResponse);
+
+
+  //printf(">>>> arrived CCECBusDevice::TestStandby #2 m_standbyResponse: %i <<<< \n", m_standbyResponse);
+  RequestTestStandby(initiator, initDest, bUpdate);
+  //printf(">>>> arrived CCECBusDevice::TestStandby #3 m_standbyResponse: %i <<<< \n", m_standbyResponse);
+
+  CLockObject lock(m_mutex);
+  return m_standbyResponse;
+}
+
+//HIB
+bool CCECBusDevice::RequestTestStandby(const cec_logical_address initiator, uint8_t initDest, bool bWaitForResponse /* = true */)
+{
+  bool bReturn(false);
+  //printf(">>>> arrived CCECBusDevice::RequestTestStandby #1 <<<< \n");
+  MarkBusy();
+  bReturn = m_handler->TransmitRequestStandby(initiator, m_iLogicalAddress, initDest, bWaitForResponse);
+  MarkReady();
+  //printf(">>>> arrived CCECBusDevice::RequestTestStandby #2 bReturn = %i <<<< \n", bReturn);
+  return bReturn;
+}
+
+//HIB
+uint16_t CCECBusDevice::TestSetStreamPath(const cec_logical_address initiator, uint16_t iPhysicalAddress, bool bUpdate /* = false */)
+{
+  bool bIsPresent(GetStatus() == CEC_DEVICE_STATUS_PRESENT);
+  bool bRequestUpdate(false);
+  {
+    CLockObject lock(m_mutex);
+    bRequestUpdate = (bIsPresent &&
+        (bUpdate || m_streamPath == CEC_FEATURE_ABORT_REASON_UNRECOGNIZED_OPCODE ||
+                    m_streamPath == CEC_FEATURE_ABORT_REASON_NOT_IN_CORRECT_MODE_TO_RESPOND ||
+                    m_streamPath == CEC_FEATURE_ABORT_REASON_CANNOT_PROVIDE_SOURCE ||
+                    m_streamPath == CEC_FEATURE_ABORT_REASON_INVALID_OPERAND ||
+                    m_streamPath == CEC_FEATURE_ABORT_REASON_REFUSED ||
+                    m_streamPath == CEC_FEATURE_ABORT_REASON_UNABLE_TO_DETERMINE ||
+                    m_streamPath == CEC_FEATURE_ABORT_REASON_UNKNOWN));
+  }
+
+
+
+  m_streamPath = CEC_STREAM_PATH_RESPONSE_UNKNOWN;
+
+  //printf(">>>> arrived CCECBusDevice::TestSetStreamPath #1 <<<< \n");
+  //printf(">>>> initiator        : %i \n",initiator);
+  //printf(">>>> m_iLogicalAddress: %i \n",m_iLogicalAddress);
+  //printf(">>>> iPhysicalAddress : %i \n",iPhysicalAddress);
+  //printf(">>>> -------------------------------------------------------\n");
+
+  //if (bRequestUpdate)
+  //{
+    //printf(">>>> arrived CCECBusDevice::TestSetStreamPath #2 m_streamPath: %i <<<< \n", m_streamPath);
+    RequestTestSetStreamPath(initiator, iPhysicalAddress, bUpdate);
+    //printf(">>>> arrived CCECBusDevice::TestSetStreamPath #3 m_streamPath: %i <<<< \n", m_streamPath);
+  //}
+
+  CLockObject lock(m_mutex);
+  return m_streamPath;
+}
+
+//HIB
+bool CCECBusDevice::RequestTestSetStreamPath(const cec_logical_address initiator, uint16_t iPhysicalAddress, bool bWaitForResponse /* = true */)
+{
+  bool bReturn(false);
+  //printf(">>>> arrived CCECBusDevice::RequestTestSetStreamPath #1 <<<< \n");
+  //printf(">>>> initiator        : %i \n",initiator);
+  //printf(">>>> m_iLogicalAddress: %i \n",m_iLogicalAddress);
+  //printf(">>>> iPhysicalAddress : %i \n",iPhysicalAddress);
+  //printf(">>>> -------------------------------------------------------\n");
+  
+  MarkBusy();
+  
+  // Set Stream Path is a broadcast command, i.e. destination = CECDEVICE_BROADCAST
+  bReturn = m_handler->TransmitRequestTestSetStreamPath(initiator, CECDEVICE_BROADCAST, iPhysicalAddress, bWaitForResponse);
+  
+  MarkReady();
+
+  return bReturn;
+}
+
+//HIB
+uint16_t CCECBusDevice::TestRoutingChange(const cec_logical_address initiator, uint16_t iPhysAddrOriginal, uint16_t iPhysAddrNew, bool bUpdate /* = false */)
+{
+  bool bIsPresent(GetStatus() == CEC_DEVICE_STATUS_PRESENT);
+  
+  m_routingInformation = CEC_STREAM_PATH_RESPONSE_UNKNOWN;
+
+  //printf(">>>> arrived CCECBusDevice::TestRoutingChange #1 <<<< \n");
+  //printf(">>>> initiator         : %i \n",initiator);
+  //printf(">>>> m_iLogicalAddress : %i \n",m_iLogicalAddress);
+  //printf(">>>> iPhysAddrOriginal : %i \n",iPhysAddrOriginal);
+  //printf(">>>> iPhysAddrNew      : %i \n",iPhysAddrNew);
+  //printf(">>>> -------------------------------------------------------\n");
+
+  //printf(">>>> arrived CCECBusDevice::TestRoutingChange #2 m_routingInformation: %i <<<< \n", m_routingInformation);
+  RequestTestRoutingChange(initiator, iPhysAddrOriginal, iPhysAddrNew, bUpdate);
+  //printf(">>>> arrived CCECBusDevice::TestRoutingChange #3 m_routingInformation: %i <<<< \n", m_routingInformation);
+  
+  CLockObject lock(m_mutex);
+  return m_routingInformation;
+}
+
+//HIB
+bool CCECBusDevice::RequestTestRoutingChange(const cec_logical_address initiator, uint16_t iPhysAddrOriginal, uint16_t iPhysAddrNew, bool bWaitForResponse /* = true */)
+{
+  bool bReturn(false);
+  //printf(">>>> arrived CCECBusDevice::RequestTestRoutingChange #1 <<<< \n");
+  //printf(">>>> initiator         : %i \n",initiator);
+  //printf(">>>> m_iLogicalAddress : %i \n",m_iLogicalAddress);
+  //printf(">>>> iPhysAddrOriginal : %i \n",iPhysAddrOriginal);
+  //printf(">>>> iPhysAddrNew      : %i \n",iPhysAddrNew);
+  //printf(">>>> -------------------------------------------------------\n");
+  //printf(">>>> arrived CCEBusDevice::RequestTestRoutingChange #1 \n");
+  MarkBusy();
+  //printf(">>>> arrived CCEBusDevice::RequestTestRoutingChange #2 \n");
+  // Set Stream Path is a broadcast command, i.e. destination = CECDEVICE_BROADCAST
+  bReturn = m_handler->TransmitRequestTestRoutingChange(initiator, CECDEVICE_BROADCAST, iPhysAddrOriginal, iPhysAddrNew, bWaitForResponse);
+  //printf(">>>> arrived CCEBusDevice::RequestTestRoutingChange #3 \n");
+  MarkReady();
+  //printf(">>>> arrived CCEBusDevice::RequestTestRoutingChange bReturn = %i \n", bReturn);
+  return bReturn;
+}
+
+//HIB
+uint16_t CCECBusDevice::TestRoutingInformation(const cec_logical_address initiator, uint16_t iPhysAddr, bool bUpdate /* = false */)
+{
+  bool bIsPresent(GetStatus() == CEC_DEVICE_STATUS_PRESENT);
+  
+  m_routingInformation = CEC_STREAM_PATH_RESPONSE_UNKNOWN;
+
+  //printf(">>>> arrived CCECBusDevice::TestRoutingInformation #1 <<<< \n");
+  //printf(">>>> initiator         : %i \n",initiator);
+  //printf(">>>> m_iLogicalAddress : %i \n",m_iLogicalAddress);
+  //printf(">>>> iPhysAddrOriginal : %i \n",iPhysAddrOriginal);
+  //printf(">>>> iPhysAddrNew      : %i \n",iPhysAddrNew);
+  //printf(">>>> -------------------------------------------------------\n");
+
+  //printf(">>>> arrived CCECBusDevice::TestRoutingInformation #2 m_routingInformation: %i <<<< \n", m_routingInformation);
+  RequestTestRoutingInformation(initiator, iPhysAddr, bUpdate);
+  //printf(">>>> arrived CCECBusDevice::TestRoutingInformation #3 m_routingInformation: %i <<<< \n", m_routingInformation);
+  
+  CLockObject lock(m_mutex);
+  return m_routingInformation;
+}
+
+//HIB
+bool CCECBusDevice::RequestTestRoutingInformation(const cec_logical_address initiator, uint16_t iPhysAddr, bool bWaitForResponse /* = true */)
+{
+  bool bReturn(false);
+  //printf(">>>> arrived CCECBusDevice::RequestTestRoutingInformation #1 <<<< \n");
+  //printf(">>>> initiator         : %i \n",initiator);
+  //printf(">>>> m_iLogicalAddress : %i \n",m_iLogicalAddress);
+  //printf(">>>> iPhysAddrOriginal : %i \n",iPhysAddrOriginal);
+  //printf(">>>> iPhysAddrNew      : %i \n",iPhysAddrNew);
+  //printf(">>>> -------------------------------------------------------\n");
+  //printf(">>>> arrived CCEBusDevice::RequestTestRoutingInformation #1 \n");
+  MarkBusy();
+  //printf(">>>> arrived CCEBusDevice::RequestTestRoutingInformation #2 \n");
+  // Set Stream Path is a broadcast command, i.e. destination = CECDEVICE_BROADCAST
+  bReturn = m_handler->TransmitRequestTestRoutingInformation(initiator, CECDEVICE_BROADCAST, iPhysAddr, bWaitForResponse);
+  //printf(">>>> arrived CCEBusDevice::RequestTestRoutingInformation #3 \n");
+  MarkReady();
+  //printf(">>>> arrived CCEBusDevice::RequestTestRoutingInformation bReturn = %i \n", bReturn);
+  return bReturn;
 }

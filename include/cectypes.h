@@ -372,7 +372,8 @@ typedef enum cec_version
   CEC_VERSION_1_2A    = 0x02,
   CEC_VERSION_1_3     = 0x03,
   CEC_VERSION_1_3A    = 0x04,
-  CEC_VERSION_1_4     = 0x05
+  CEC_VERSION_1_4     = 0x05,
+  CEC_VERSION_2_0     = 0x06
 } cec_version;
 
 typedef enum cec_channel_identifier
@@ -536,8 +537,41 @@ typedef enum cec_status_request
 typedef enum cec_system_audio_status
 {
   CEC_SYSTEM_AUDIO_STATUS_OFF = 0,
-  CEC_SYSTEM_AUDIO_STATUS_ON  = 1
+  CEC_SYSTEM_AUDIO_STATUS_ON  = 1,
+  CEC_SYSTEM_AUDIO_STATUS_UNKNOWN = 2
 } cec_system_audio_status;
+
+
+//HIB
+typedef enum cec_arc_status
+{
+  CEC_ARC_STATUS_OFF = 0,
+  CEC_ARC_STATUS_ON  = 1,
+  CEC_ARC_STATUS_UNKNOWN = 2
+} cec_arc_status;
+
+//HIB
+//typedef enum cec_short_audio_descriptor_status
+//{
+//  CEC_SHORT_AUDIO_DESCRIPTOR_UNKNOWN = 0xFF000000
+//} cec_short_audio_descriptor_status;
+
+//HIB
+typedef enum cec_feature_abort_reason
+{
+  CEC_FEATURE_ABORT_REASON_UNRECOGNIZED_OPCODE            = 0,
+  CEC_FEATURE_ABORT_REASON_NOT_IN_CORRECT_MODE_TO_RESPOND = 1,
+  CEC_FEATURE_ABORT_REASON_CANNOT_PROVIDE_SOURCE          = 2,
+  CEC_FEATURE_ABORT_REASON_INVALID_OPERAND                = 3,
+  CEC_FEATURE_ABORT_REASON_REFUSED                        = 4,
+  CEC_FEATURE_ABORT_REASON_UNABLE_TO_DETERMINE            = 5,
+  CEC_FEATURE_ABORT_REASON_UNKNOWN                        = 15
+} cec_feature_abort_reason;
+
+typedef enum cec_stream_path_response
+{
+  CEC_STREAM_PATH_RESPONSE_UNKNOWN = 65535 
+} cec_stream_path_response;
 
 typedef enum cec_timer_cleared_status_data
 {
@@ -816,6 +850,11 @@ typedef enum cec_opcode
   CEC_OPCODE_REQUEST_ARC_END               = 0xC4,
   CEC_OPCODE_END_ARC                       = 0xC5,
   CEC_OPCODE_CDC                           = 0xF8,
+
+  CEC_OPCODE_REPORT_SHORT_AUDIO_DESCRIPTOR  = 0xA3,
+  CEC_OPCODE_REQUEST_SHORT_AUDIO_DESCRIPTOR = 0xA4,
+
+
   /* when this opcode is set, no opcode will be sent to the device. this is one of the reserved numbers */
   CEC_OPCODE_NONE                          = 0xFD
 } cec_opcode;
@@ -1091,6 +1130,7 @@ typedef struct cec_command
    */
   static void Format(cec_command &command, cec_logical_address initiator, cec_logical_address destination, cec_opcode opcode, int32_t timeout = CEC_DEFAULT_TRANSMIT_TIMEOUT)
   {
+    //printf(">>>> arrived Format <<<< \n");
     command.Clear();
     command.initiator        = initiator;
     command.destination      = destination;
@@ -1167,12 +1207,74 @@ typedef struct cec_command
       return CEC_OPCODE_SYSTEM_AUDIO_MODE_STATUS;
     case CEC_OPCODE_SYSTEM_AUDIO_MODE_REQUEST:
       return CEC_OPCODE_SET_SYSTEM_AUDIO_MODE;
+    
+    //HIB
+    case CEC_OPCODE_REQUEST_ARC_END:
+    {
+      //printf(">>>> arrived GetResponseOpcode CEC_OPCODE_REQUEST_ARC_END <<<< \n");
+      return CEC_OPCODE_END_ARC;
+      //return CEC_OPCODE_START_ARC;
+    }
+    //HIB
+    case CEC_OPCODE_REQUEST_ARC_START:
+    {
+      //printf(">>>> arrived GetResponseOpcode CEC_OPCODE_REQUEST_ARC_START <<<< \n");
+      return CEC_OPCODE_START_ARC;
+      //return CEC_OPCODE_END_ARC;
+      //return CEC_OPCODE_SET_SYSTEM_AUDIO_MODE;
+    }
+
+    //HIB
+    case CEC_OPCODE_SET_STREAM_PATH:
+    {
+      //printf(">>>> arrived GetResponseOpcode : CEC_OPCODE_SET_STREAM_PATH <<<< \n");
+      return CEC_OPCODE_ACTIVE_SOURCE;
+    }
+
+    //HIB
+    case CEC_OPCODE_ROUTING_CHANGE:
+    {
+      //printf(">>>> arrived GetResponseOpcode : CEC_OPCODE_ROUTING_CHANGE <<<< \n");
+      return CEC_OPCODE_ROUTING_INFORMATION;
+    }
+
+    //HIB
+    case CEC_OPCODE_ROUTING_INFORMATION:
+    {
+      //printf(">>>> arrived GetResponseOpcode : CEC_OPCODE_ROUTING_CHANGE <<<< \n");
+      return CEC_OPCODE_ROUTING_INFORMATION;
+    }
+
+    //HIB
+    case CEC_OPCODE_REQUEST_SHORT_AUDIO_DESCRIPTOR:
+    {
+      //printf(">>>> arrived GetResponseOpcode : CEC_OPCODE_REQUEST_SHORT_AUDIO_DESCRIPTOR <<<< \n");
+      return CEC_OPCODE_REPORT_SHORT_AUDIO_DESCRIPTOR;
+    }
+
     default:
       break;
     }
 
     return CEC_OPCODE_NONE;
   }
+
+
+  //HIB
+  static cec_opcode GetResponseFeatureAbortOpcode(cec_opcode opcode)
+  {
+    //printf(">>>> arrived GetResponseFeatureAbortOpcode <<<< \n");
+    return CEC_OPCODE_FEATURE_ABORT;
+  }
+
+  //HIB
+  static cec_opcode GetResponseStandbyOpcode(cec_opcode opcode)
+  {
+    //printf(">>>> arrived GetResponseStandbyOpcode <<<< \n");
+    return CEC_OPCODE_STANDBY;
+    //return CEC_OPCODE_FEATURE_ABORT;
+  }
+
 
   void PushArray(size_t len, const uint8_t *data)
   {

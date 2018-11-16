@@ -262,10 +262,43 @@ namespace CEC
     virtual bool                  SendSetInactiveView(void);
     virtual bool                  SendSetMenuState(const cec_menu_state state, bool bSendUpdate = true);
     virtual bool                  SendSetOSDString(const cec_logical_address iLogicalAddress, const cec_display_control duration, const char *strMessage);
+    virtual bool                  SendSendArcStart(const cec_logical_address iLogicalAddress, int startOrEnd);
+
     virtual bool                  SwitchMonitoring(bool bEnable);
     virtual cec_version           GetDeviceCecVersion(const cec_logical_address iAddress);
     virtual bool                  GetDeviceMenuLanguage(const cec_logical_address iAddress, cec_menu_language &language);
     virtual uint32_t              GetDeviceVendorId(const cec_logical_address iAddress);
+    
+    //HIB
+    virtual uint8_t               GetDeviceSystemAudioModeStatus(const cec_logical_address iAddress);
+    //HIB
+    virtual uint8_t               GetDeviceAudioStatus(const cec_logical_address iAddress);
+    //HIB
+    virtual uint32_t              DeviceRequestAudioDescriptor(const cec_logical_address iAddress, const uint8_t iAudioFormatIdCode);
+    //HIB
+    virtual uint8_t               DeviceSystemAudioModeRequest(const cec_logical_address iAddress, uint16_t iPhysicalAddress, bool bAddPhysicalAddress);
+    //HIB
+    virtual uint8_t               DeviceRequestArcTermination(const cec_logical_address iAddress);
+    //HIB
+    virtual uint8_t               DeviceRequestArcInitiation(const cec_logical_address iAddress);
+    //HIB
+    virtual bool                  DeviceReportArcTerminated(const cec_logical_address iAddress);
+    //HIB
+    virtual bool                  DeviceReportArcInitiated(const cec_logical_address iAddress);
+    //HIB
+    virtual uint8_t               DeviceRequestArcInitiationWrongParam(const cec_logical_address iAddress, uint16_t iWrongParam);
+    //HIB
+    virtual uint8_t               DeviceUnsupportedOpcode(const cec_logical_address iAddress, cec_opcode opcode);
+    //HIB
+    virtual uint8_t               DeviceStandby(const cec_logical_address iAddress, uint8_t initDest);
+    //HIB
+    virtual uint16_t              DeviceSetStreamPath(const cec_logical_address iAddress, const uint16_t iPhysicalAddress, const bool bUsePhysicalAddress);
+    //HIB
+    virtual uint16_t              DeviceRoutingChange(const cec_logical_address iAddress, const uint16_t iPhysicalAddressOriginal, const uint16_t iPhysicalAddressNew);
+    //HIB
+    virtual uint16_t              DeviceRoutingInformation(const cec_logical_address iAddress, const uint16_t iPhysicalAddress);
+
+
     virtual cec_power_status      GetDevicePowerStatus(const cec_logical_address iAddress);
     virtual uint16_t              GetDevicePhysicalAddress(const cec_logical_address iAddress);
     virtual bool                  PollDevice(const cec_logical_address iAddress);
@@ -280,6 +313,10 @@ namespace CEC
     virtual uint8_t               AudioUnmute(void);
     virtual uint8_t               AudioStatus(void);
     virtual bool                  SendKeypress(const cec_logical_address iDestination, const cec_user_control_code key, bool bWait = true);
+
+    //HIB
+    virtual bool                  SendKeypressWrongParam(const cec_logical_address iDestination, const cec_user_control_code key, uint8_t iWrongParam, bool bNoParam, bool bWait);
+
     virtual bool                  SendKeyRelease(const cec_logical_address iDestination, bool bWait = true);
     virtual cec_osd_name          GetDeviceOSDName(const cec_logical_address iAddress);
     virtual cec_logical_address   GetActiveSource(void);

@@ -117,6 +117,10 @@ namespace CEC
     virtual void                  SetUnsupportedFeature(cec_opcode opcode);
 
     virtual bool                  TransmitKeypress(const cec_logical_address initiator, cec_user_control_code key, bool bWait = true);
+    
+    //HIB
+    virtual bool                  TransmitKeypressWrongParam(const cec_logical_address initiator, cec_user_control_code key, uint8_t iWrongParam, bool bNoParam, bool bWait); 
+
     virtual bool                  TransmitKeyRelease(const cec_logical_address initiator, bool bWait = true);
 
     virtual cec_version           GetCecVersion(const cec_logical_address initiator, bool bUpdate = false);
@@ -131,6 +135,8 @@ namespace CEC
     virtual bool                  TransmitSetMenuLanguage(const cec_logical_address destination, bool bIsReply);
 
     virtual bool                  TransmitOSDString(const cec_logical_address destination, cec_display_control duration, const char *strMessage, bool bIsReply);
+
+    virtual bool                  TransmitArcStartEnd(const cec_logical_address destination, int startOrEnd);
 
     virtual std::string           GetCurrentOSDName(void);
     virtual std::string           GetOSDName(const cec_logical_address initiator, bool bUpdate = false);
@@ -192,6 +198,36 @@ namespace CEC
 
     virtual bool                  TryLogicalAddress(cec_version libCECSpecVersion = CEC_VERSION_1_4);
 
+    //HIB
+    virtual void                  SetFeatureAbortStatus(uint8_t unsupportedOpcode, uint8_t FAStatus);
+    //HIB
+    virtual void                  SetStandbyStatus(uint8_t FAStatus);
+    //HIB
+    virtual uint8_t               TestUnsupportedOpcode(const cec_logical_address initiator, cec_opcode opcode, bool bUpdate /* = false */);
+    //HIB
+    virtual bool                  RequestTestUnsupportedOpcode(const cec_logical_address initiator, cec_opcode opcode, bool bWaitForResponse /* = true */);
+    //HIB
+    virtual uint8_t               TestStandby(const cec_logical_address initiator, uint8_t initDest, bool bUpdate /* = false */);
+    //HIB
+    virtual bool                  RequestTestStandby(const cec_logical_address initiator, uint8_t initDest, bool bWaitForResponse /* = true */);
+    //HIB
+    uint16_t                      TestSetStreamPath(const cec_logical_address initiator, uint16_t iPhysicalAddress, bool bUpdate /* = false */);
+    //HIB
+    bool                          RequestTestSetStreamPath(const cec_logical_address initiator, uint16_t iPhysicalAddress, bool bWaitForResponse /* = true */);
+    //HIB
+    virtual void                  SetStreamPathResponse(uint16_t StreamPathResponse);
+    //HIB
+    uint16_t                      TestRoutingChange(const cec_logical_address initiator, uint16_t iPhysAddrOriginal, uint16_t iPhysAddrNew, bool bUpdate /* = false */);
+    //HIB
+    bool                          RequestTestRoutingChange(const cec_logical_address initiator, uint16_t iPhysAddrOriginal, uint16_t iPhysAddrNew, bool bWaitForResponse /* = true */);
+    //HIB
+    uint16_t                      TestRoutingInformation(const cec_logical_address initiator, uint16_t iPhysAddr, bool bUpdate /* = false */);
+    //HIB
+    bool                          RequestTestRoutingInformation(const cec_logical_address initiator, uint16_t iPhysAddr, bool bWaitForResponse /* = true */);
+    //HIB
+    virtual void                  SetRoutingInformationResponse(uint16_t Response);
+
+
     CECClientPtr                  GetClient(void);
     void                          SignalOpcode(cec_opcode opcode);
     bool                          WaitForOpcode(cec_opcode opcode);
@@ -240,5 +276,10 @@ namespace CEC
     bool                  m_bVendorIdRequested;
     CWaitForResponse     *m_waitForResponse;
     bool                  m_bImageViewOnSent;
+    uint8_t               m_featureAbortOpcode; //HIB
+    uint8_t               m_featureAbort;//HIB
+    uint8_t               m_standbyResponse;//HIB
+    uint16_t              m_streamPath;//HIB
+    uint16_t              m_routingInformation;//HIB
   };
 };

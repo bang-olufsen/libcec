@@ -292,13 +292,16 @@ void CCECAdapterMessage::PushBack(uint8_t byte)
 
 void CCECAdapterMessage::PushEscaped(uint8_t byte)
 {
+  //printf(">>>> arrived CCECAdapterMessage::PushEscaped #1 <<<< \n");
   if (byte >= MSGESC)
   {
+    //printf(">>>> arrived CCECAdapterMessage::PushEscaped #2 <<<< \n");
     PushBack(MSGESC);
     PushBack(byte - ESCOFFSET);
   }
   else
   {
+    //printf(">>>> arrived CCECAdapterMessage::PushEscaped #3 <<<< \n");
     PushBack(byte);
   }
 }

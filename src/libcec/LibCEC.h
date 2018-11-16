@@ -74,10 +74,41 @@ namespace CEC
       bool SetInactiveView(void);
       bool SetMenuState(cec_menu_state state, bool bSendUpdate = true);
       bool SetOSDString(cec_logical_address iLogicalAddress, cec_display_control duration, const char *strMessage);
+      bool SendArcStart(cec_logical_address iLogicalAddress, int startOrEnd);
       bool SwitchMonitoring(bool bEnable);
       cec_version GetDeviceCecVersion(cec_logical_address iAddress);
       bool GetDeviceMenuLanguage(cec_logical_address iAddress, cec_menu_language *language);
       uint32_t GetDeviceVendorId(cec_logical_address iAddress);
+      
+      //HIB
+      uint8_t GetDeviceSystemAudioModeStatus(const cec_logical_address iAddress);
+      //HIB
+      uint8_t GetDeviceAudioStatus(const cec_logical_address iAddress);
+      //HIB
+      uint32_t DeviceRequestAudioDescriptor(const cec_logical_address iAddress, const uint8_t iAudioFormatIdCode);
+      //HIB
+      uint8_t DeviceSystemAudioModeRequest(const cec_logical_address iAddress, uint16_t iPhysicalAddress, bool bAddPhysicalAddress);
+      //HIB
+      uint8_t DeviceRequestArcTermination(const cec_logical_address iAddress);
+      //HIB
+      uint8_t DeviceRequestArcInitiation(const cec_logical_address iAddress);
+      //HIB
+      bool    DeviceReportArcTerminated(const cec_logical_address iAddress);
+      //HIB
+      bool    DeviceReportArcInitiated(const cec_logical_address iAddress);
+      //HIB
+      uint8_t DeviceRequestArcInitiationWrongParam(const cec_logical_address iAddress, uint16_t iWrongParam);
+      //HIB
+      uint8_t DeviceUnsupportedOpcode(const cec_logical_address iAddress, cec_opcode opcode);
+      //HIB
+      uint8_t DeviceStandby(const cec_logical_address iAddress, uint8_t initDest);
+      //HIB
+      uint16_t DeviceSetStreamPath(const cec_logical_address iAddress, const uint16_t iPhysicalAddress, const bool bUsePhysicalAddress);
+      //HIB
+      uint16_t DeviceRoutingChange(const cec_logical_address iAddress, const uint16_t iPhysicalAddressOriginal, const uint16_t iPhysicalAddressNew);
+      //HIB
+      uint16_t DeviceRoutingInformation(const cec_logical_address iAddress, const uint16_t iPhysicalAddress);
+
       uint16_t GetDevicePhysicalAddress(cec_logical_address iAddress);
       cec_power_status GetDevicePowerStatus(cec_logical_address iAddress);
       bool PollDevice(cec_logical_address iAddress);
@@ -89,6 +120,10 @@ namespace CEC
       uint8_t VolumeDown(bool bSendRelease = true);
       uint8_t MuteAudio(bool bSendRelease = true);
       bool SendKeypress(cec_logical_address iDestination, cec_user_control_code key, bool bWait = true);
+
+      //HIB
+      bool SendKeypressWrongParam(cec_logical_address iDestination, cec_user_control_code key, uint8_t iWrongParam, bool NoParam = true, bool bWait = true);
+
       bool SendKeyRelease(cec_logical_address iDestination, bool bWait = true);
       cec_osd_name GetDeviceOSDName(cec_logical_address iAddress);
       cec_logical_address GetActiveSource(void);
@@ -111,6 +146,7 @@ namespace CEC
       const char* ToString(const cec_deck_info status)         { return CCECTypeUtils::ToString(status); }
       const char* ToString(const cec_opcode opcode)            { return CCECTypeUtils::ToString(opcode); }
       const char* ToString(const cec_system_audio_status mode) { return CCECTypeUtils::ToString(mode); }
+      const char* ToString(const cec_arc_status status)        { return CCECTypeUtils::ToString(status); }
       const char* ToString(const cec_audio_status status)      { return CCECTypeUtils::ToString(status); }
       const char* ToString(const cec_device_type type)         { return CCECTypeUtils::ToString(type); }
       const char* ToString(const cec_user_control_code key)    { return CCECTypeUtils::ToString(key); }

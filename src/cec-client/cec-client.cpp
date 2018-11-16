@@ -323,6 +323,8 @@ void ShowHelpConsole(void)
   "[txn] {bytes}             transfer bytes but don't wait for transmission ACK." << std::endl <<
   "[on] {address}            power on the device with the given logical address." << std::endl <<
   "[standby] {address}       put the device with the given address in standby mode." << std::endl <<
+  "arcstart                  send ARC start to TV" << std::endl <<
+  "arcend                    send ARC end to TV" << std::endl <<
   "[la] {logical address}    change the logical address of the CEC adapter." << std::endl <<
   "[p] {device} {port}       change the HDMI port number of the CEC adapter." << std::endl <<
   "[pa] {physical address}   change the physical address of the CEC adapter." << std::endl <<
@@ -565,6 +567,34 @@ bool ProcessCommandOSD(ICECAdapter *parser, const std::string &command, std::str
       parser->SetOSDString((cec_logical_address) iAddr, CEC_DISPLAY_CONTROL_DISPLAY_FOR_DEFAULT_TIME, strMessage.c_str());
       return true;
     }
+  }
+
+  return false;
+}
+
+bool ProcessCommandArcStart(ICECAdapter *parser, const std::string &command, std::string & UNUSED(arguments))
+{
+  if (command == "arcstart")
+  {
+    PrintToStdOut("ProcessCommandArcStart: SendArcStart to TV(0) param(1=start)");
+
+    parser->SendArcStart((cec_logical_address) 0, 1);
+    return true;
+
+  }
+
+  return false;
+}
+
+bool ProcessCommandArcEnd(ICECAdapter *parser, const std::string &command, std::string & UNUSED(arguments))
+{
+  if (command == "arcend")
+  {
+    PrintToStdOut("ProcessCommandArcEnd: SendArcEnd to TV(0) param(0=end)");
+
+    parser->SendArcStart((cec_logical_address) 0, 0);
+    return true;
+
   }
 
   return false;
@@ -963,6 +993,8 @@ bool ProcessConsoleCommand(ICECAdapter *parser, std::string &input)
       ProcessCommandAS(parser, command, input) ||
       ProcessCommandIS(parser, command, input) ||
       ProcessCommandOSD(parser, command, input) ||
+      ProcessCommandArcStart(parser, command, input) ||
+      ProcessCommandArcEnd(parser, command, input) ||
       ProcessCommandPING(parser, command, input) ||
       ProcessCommandVOLUP(parser, command, input) ||
       ProcessCommandVOLDOWN(parser, command, input) ||

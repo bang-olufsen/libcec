@@ -240,8 +240,15 @@ void CUSBCECAdapterCommunication::Close(void)
 cec_adapter_message_state CUSBCECAdapterCommunication::Write(const cec_command &data, bool &bRetry, uint8_t iLineTimeout, bool bIsReply)
 {
   cec_adapter_message_state retVal(ADAPTER_MESSAGE_STATE_UNKNOWN);
+  bool test1, test2, test3;
+
+  //printf(">>>> arrived CUSBCECAdapterCommunication::Write #1 <<<< \n");
+
   if (!IsRunning())
+  {
+    //printf(">>>> arrived CUSBCECAdapterCommunication::Write #2 retVal =  %i <<<< \n",retVal);
     return retVal;
+  }
 
   CCECAdapterMessage *output = new CCECAdapterMessage(data, iLineTimeout);
   output->bFireAndForget = bIsReply;
@@ -254,16 +261,39 @@ cec_adapter_message_state CUSBCECAdapterCommunication::Write(const cec_command &
   {
     retVal = m_adapterMessageQueue->Write(output) ?
         ADAPTER_MESSAGE_STATE_WAITING_TO_BE_SENT : ADAPTER_MESSAGE_STATE_ERROR;
+    //printf(">>>> arrived CUSBCECAdapterCommunication::Write #3 retVal =  %i <<<< \n",retVal);
   }
   else
   {
-    bRetry = (!m_adapterMessageQueue->Write(output) || output->NeedsRetry()) && output->transmit_timeout > 0;
+
+    test1 = (m_adapterMessageQueue->Write(output));
+    test2 = (output->NeedsRetry());
+    test3 = (output->transmit_timeout > 0);
+
+
+    //bRetry = (!m_adapterMessageQueue->Write(output) || output->NeedsRetry()) && output->transmit_timeout > 0;
+    
+    bRetry = (!test1 || test2) && test3;
+
+    //printf(">>>> arrived CUSBCECAdapterCommunication::Write #3.1 retVal =  %i <<<< \n",retVal);
+    //printf(">>>> test1  = %i \n",test1);
+    //printf(">>>> test2  = %i \n",test2);
+    //printf(">>>> test3  = %i \n",test3);
+    //printf(">>>> bRetry = %i \n",bRetry);
+        
     if (bRetry)
+    {
+      //printf(">>>> arrived CUSBCECAdapterCommunication::Write #3.5 retVal =  %i <<<< \n",retVal);  
       Sleep(CEC_DEFAULT_TRANSMIT_RETRY_WAIT);
+    }
     retVal = output->state;
+
+    //printf(">>>> arrived CUSBCECAdapterCommunication::Write #4 retVal =  %i <<<< \n",retVal);
 
     delete output;
   }
+
+  //printf(">>>> arrived CUSBCECAdapterCommunication::Write #5 retVal =  %i <<<< \n",retVal);
   return retVal;
 }
 
@@ -517,6 +547,8 @@ bool CUSBCECAdapterCommunication::CheckAdapter(uint32_t iTimeoutMs /* = CEC_DEFA
 bool CUSBCECAdapterCommunication::IsOpen(void)
 {
   /* thread is not being stopped, the port is open and the thread is running */
+  
+  //printf(">>>> arrived CUSBCECAdapterCommunication #1 <<<< \n");
   return !IsStopped() && m_port->IsOpen() && IsRunning();
 }
 
@@ -796,6 +828,9 @@ void *CAdapterEepromWriteThread::Process(void)
 bool CAdapterEepromWriteThread::Write(void)
 {
   CLockObject lock(m_mutex);
+
+  //printf(">>>> arrived CAdapterEepromWriteThread::Write <<<< \n");
+
   if (m_iScheduleEepromWrite == 0)
   {
     int64_t iNow = GetTimeMs();

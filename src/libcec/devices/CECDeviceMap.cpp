@@ -204,6 +204,7 @@ void CCECDeviceMap::GetWakeDevices(const libcec_configuration &configuration, CE
 
 CCECBusDevice *CCECDeviceMap::GetActiveSource(void) const
 {
+  //printf(">>>> arrived 2000 <<<< \n");
   for (CECDEVICEMAP::const_iterator it = m_busDevices.begin(); it != m_busDevices.end(); it++)
   {
     if (it->second->IsActiveSource())

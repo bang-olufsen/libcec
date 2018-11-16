@@ -45,7 +45,11 @@ class pyCecClient:
   def SetConfiguration(self):
     self.cecconfig.strDeviceName   = "pyLibCec"
     self.cecconfig.bActivateSource = 0
-    self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
+    #self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
+    #self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_PLAYBACK_DEVICE)
+    self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_TV)
+    #self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_TUNER)
+    #self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_AUDIO_SYSTEM)
     self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
 
   def SetLogCallback(self, callback):
@@ -56,14 +60,16 @@ class pyCecClient:
 
   # detect an adapter and return the com port path
   def DetectAdapter(self):
-    retval = None
+    #retval = [] #None
     adapters = self.lib.DetectAdapters()
     for adapter in adapters:
       print("found a CEC adapter:")
       print("port:     " + adapter.strComName)
       print("vendor:   " + hex(adapter.iVendorId))
       print("product:  " + hex(adapter.iProductId))
-      retval = adapter.strComName
+      #retval = adapter.strComName
+    adaptername = "/dev/ttyACM0"
+    retval = adaptername
     return retval
 
   # initialise libCEC
@@ -73,12 +79,30 @@ class pyCecClient:
     print("libCEC version " + self.lib.VersionToString(self.cecconfig.serverVersion) + " loaded: " + self.lib.GetLibInfo())
 
     # search for adapters
-    adapter = self.DetectAdapter()
+#    adapters = self.DetectAdapter()
+#    print adapters
+#    connected_one = False
+#    for adapter in adapters:
+#      if adapter is None:
+#        print("No adapters found")
+#      else:
+#        if (self.lib.Open(adapter) and (not (connected_one))):
+#          print("connection opened" + adapter)
+#          connected_one = True
+#          self.MainLoop()
+#        else:
+#          print("failed to open a connection to the CEC adapter " + adapter)
+
+
+    # search for adapters
+    #adapter = self.DetectAdapter()
+    adapter = "/dev/ttyACM0"
     if adapter == None:
       print("No adapters found")
     else:
+      print("try to open" + adapter)
       if self.lib.Open(adapter):
-        print("connection opened")
+        print("connection opened" + adapter)
         self.MainLoop()
       else:
         print("failed to open a connection to the CEC adapter")
@@ -106,7 +130,13 @@ class pyCecClient:
 
   # send a standby command
   def ProcessCommandStandby(self):
+    CECDEVICE_BROADCAST = 4
     self.lib.StandbyDevices(CECDEVICE_BROADCAST)
+
+  # send a power on command
+  def ProcessCommandPowerOn(self):
+    CECDEVICE_BROADCAST = 0
+    self.lib.PowerOnDevices(CECDEVICE_BROADCAST)
 
   # send a custom command
   def ProcessCommandTx(self, data):
@@ -132,6 +162,15 @@ class pyCecClient:
         cecVersion      = self.lib.GetDeviceCecVersion(x)
         power           = self.lib.GetDevicePowerStatus(x)
         osdName         = self.lib.GetDeviceOSDName(x)
+        print "=========================================="
+        print "Device logical addr -", x
+        print "Physical address     ", physicalAddress
+        print "Active source -------", active
+        print "VendorID             ", vendorId
+        print "CEC version ---------", cecVersion
+        print "OSD name             ", osdName
+        print "Power status --------", power
+        print ""
         strLog += "device #" + str(x) +": " + self.lib.LogicalAddressToString(x)  + "\n"
         strLog += "address:       " + str(physicalAddress) + "\n"
         strLog += "active source: " + str(active) + "\n"
@@ -153,8 +192,10 @@ class pyCecClient:
         self.ProcessCommandSelf()
       elif command == 'as' or command == 'activesource':
         self.ProcessCommandActiveSource()
-      elif command == 'standby':
+      elif command == 'off':
         self.ProcessCommandStandby()
+      elif command == 'on':
+        self.ProcessCommandPowerOn()
       elif command == 'scan':
         self.ProcessCommandScan()
       elif command[:2] == 'tx':
@@ -199,9 +240,8 @@ def key_press_callback(key, duration):
 if __name__ == '__main__':
   # initialise libCEC
   lib = pyCecClient()
-  lib.SetLogCallback(log_callback)
+  #lib.SetLogCallback(log_callback)
   lib.SetKeyPressCallback(key_press_callback)
 
   # initialise libCEC and enter the main loop
   lib.InitLibCec()
-

@@ -128,6 +128,10 @@ typedef struct {
   void                                (CDECL *deck_status_to_string)(const CEC_NAMESPACE cec_deck_info status, char* buf, size_t bufsize);
   void                                (CDECL *opcode_to_string)(const CEC_NAMESPACE cec_opcode opcode, char* buf, size_t bufsize);
   void                                (CDECL *system_audio_status_to_string)(const CEC_NAMESPACE cec_system_audio_status mode, char* buf, size_t bufsize);
+  
+  //HIB
+  void                                (CDECL *arc_status_to_string)(const CEC_NAMESPACE cec_arc_status status, char* buf, size_t bufsize);
+  
   void                                (CDECL *audio_status_to_string)(const CEC_NAMESPACE cec_audio_status status, char* buf, size_t bufsize);
   void                                (CDECL *vendor_id_to_string)(const CEC_NAMESPACE cec_vendor_id vendor, char* buf, size_t bufsize);
   void                                (CDECL *user_control_key_to_string)(const CEC_NAMESPACE cec_user_control_code key, char* buf, size_t bufsize);
@@ -205,6 +209,10 @@ static int libcecc_resolve_all(void* lib, libcec_interface_t* iface)
   _libcecc_resolve(lib, iface->deck_status_to_string,         "libcec_deck_status_to_string",         void(CDECL *)(const CEC_NAMESPACE cec_deck_info, char*, size_t));
   _libcecc_resolve(lib, iface->opcode_to_string,              "libcec_opcode_to_string",              void(CDECL *)(const CEC_NAMESPACE cec_opcode, char*, size_t));
   _libcecc_resolve(lib, iface->system_audio_status_to_string, "libcec_system_audio_status_to_string", void(CDECL *)(const CEC_NAMESPACE cec_system_audio_status, char*, size_t));
+  
+  //HIB
+  _libcecc_resolve(lib, iface->arc_status_to_string,          "libcec_arc_status_to_string", void(CDECL *)(const CEC_NAMESPACE cec_arc_status, char*, size_t));
+    
   _libcecc_resolve(lib, iface->audio_status_to_string,        "libcec_audio_status_to_string",        void(CDECL *)(const CEC_NAMESPACE cec_audio_status, char*, size_t));
   _libcecc_resolve(lib, iface->vendor_id_to_string,           "libcec_vendor_id_to_string",           void(CDECL *)(const CEC_NAMESPACE cec_vendor_id, char*, size_t));
   _libcecc_resolve(lib, iface->user_control_key_to_string,    "libcec_user_control_key_to_string",    void(CDECL *)(const CEC_NAMESPACE cec_user_control_code, char*, size_t));

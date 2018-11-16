@@ -185,6 +185,8 @@ namespace CEC
         return "1.3a";
       case CEC_VERSION_1_4:
         return "1.4";
+      case CEC_VERSION_2_0:
+        return "2.0";
       default:
         return "unknown";
       }
@@ -463,6 +465,21 @@ namespace CEC
         return "on";
       case CEC_SYSTEM_AUDIO_STATUS_OFF:
         return "off";
+      default:
+        return "unknown";
+      }
+    }
+
+    static const char *ToString(const cec_arc_status status)
+    {
+      switch(status)
+      {
+      case CEC_ARC_STATUS_ON:
+        return "on";
+      case CEC_ARC_STATUS_OFF:
+        return "off";
+      case CEC_ARC_STATUS_UNKNOWN:
+        return "unknown";
       default:
         return "unknown";
       }

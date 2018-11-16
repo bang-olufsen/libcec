@@ -45,9 +45,57 @@ namespace CEC
 
     bool SetAudioStatus(uint8_t status);
     bool SetSystemAudioModeStatus(const cec_system_audio_status mode);
+    
+    //HIB
+    bool SetArcStatus(const cec_arc_status status);
+    
+    //HIB
+    bool SetShortAudioDescriptor(uint32_t status);
+
     bool TransmitAudioStatus(cec_logical_address dest, bool bIsReply);
     bool TransmitSetSystemAudioMode(cec_logical_address dest, bool bIsReply);
     bool TransmitSystemAudioModeStatus(cec_logical_address dest, bool bIsReply);
+    bool TransmitArcStartEnd(const cec_logical_address destination, int startOrEnd);
+    
+    //HIB
+    cec_system_audio_status GetSystemAudioModeStatus(const cec_logical_address initiator, bool bUpdate);
+    //HIB
+    bool RequestSystemAudioModeStatus(const cec_logical_address initiator, bool bWaitForResponse);
+
+    //HIB
+    uint32_t TestRequestAudioDescriptor(const cec_logical_address initiator, uint8_t iAudioFormatIdCode, bool bUpdate);
+    //HIB
+    bool RequestTestRequestAudioDescriptor(const cec_logical_address initiator, uint8_t iAudioFormatIdCode, bool bWaitForResponse);
+
+    //HIB
+    cec_system_audio_status TestSystemAudioModeRequest(const cec_logical_address initiator, uint16_t iPhysicalAddress, bool bAddPhysicalAddress, bool bUpdate);
+    //HIB
+    bool RequestTestSystemAudioModeRequest(const cec_logical_address initiator, uint16_t iPhysicalAddress, bool bAddPhysicalAddress, bool bWaitForResponse);
+
+    //HIB
+    cec_arc_status TestRequestArcTermination(const cec_logical_address initiator, bool bUpdate);
+    //HIB
+    bool RequestTestRequestArcTermination(const cec_logical_address initiator, bool bWaitForResponse);
+
+    //HIB
+    cec_arc_status TestRequestArcInitiation(const cec_logical_address initiator, bool bUpdate);
+    //HIB
+    bool RequestTestRequestArcInitiation(const cec_logical_address initiator, bool bWaitForResponse);
+
+    //HIB
+    bool TestReportArcTerminated(const cec_logical_address initiator, bool bUpdate);
+    //HIB
+    bool RequestTestReportArcTerminated(const cec_logical_address initiator, bool bWaitForResponse);
+
+    //HIB
+    bool TestReportArcInitiated(const cec_logical_address initiator, bool bUpdate);
+    //HIB
+    bool RequestTestReportArcInitiated(const cec_logical_address initiator, bool bWaitForResponse);
+
+    //HIB
+    cec_arc_status TestRequestArcInitiationWrongParam(const cec_logical_address initiator, uint16_t iWrongParam, bool bUpdate);
+    //*HIB
+    bool RequestTestRequestArcInitiationWrongParam(const cec_logical_address initiator, uint16_t iWrongParam, bool bWaitForResponse);
 
     uint8_t VolumeUp(const cec_logical_address source, bool bSendRelease = true);
     uint8_t VolumeDown(const cec_logical_address source, bool bSendRelease = true);
@@ -59,8 +107,13 @@ namespace CEC
 
   protected:
     bool RequestAudioStatus(const cec_logical_address initiator, bool bWaitForResponse = true);
+    
 
     cec_system_audio_status m_systemAudioStatus;
+    cec_arc_status          m_arcStatus; 
     uint8_t                 m_audioStatus;
+    uint32_t                m_audioDescriptorStatus;
+
+    bool arcStarted;
   };
 }

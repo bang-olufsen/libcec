@@ -159,6 +159,7 @@ void CCECProcessor::ResetMembers(void)
 bool CCECProcessor::OpenConnection(const char *strPort, uint16_t iBaudRate, uint32_t iTimeoutMs, bool bStartListening /* = true */)
 {
   bool bReturn(false);
+  //printf(">>>> arrived CCECProcessor::OpenConnection iTimeoutMs = %i \n", iTimeoutMs);
   CTimeout timeout(iTimeoutMs > 0 ? iTimeoutMs : CEC_DEFAULT_TRANSMIT_WAIT);
 
   // ensure that a previous connection is closed
@@ -394,12 +395,14 @@ bool CCECProcessor::PollDevice(cec_logical_address iAddress)
   CCECBusDevice *primary = GetPrimaryDevice();
   // poll the destination, with the primary as source
   if (primary)
+    //printf(">>>> arrived CCECProssor::PollDevice #1 <<<< \n");
     return primary->TransmitPoll(iAddress, true);
-
+  //printf(">>>> arrived CCECProssor::PollDevice #2 <<<< \n");
   CCECBusDevice *device = m_busDevices->At(CECDEVICE_UNREGISTERED);
   if (device)
+    //printf(">>>> arrived CCECProssor::PollDevice #3 <<<< \n");
     return device->TransmitPoll(iAddress, true);
-
+  //printf(">>>> arrived CCECProssor::PollDevice #4 <<<< \n");
   return false;
 }
 
@@ -419,34 +422,43 @@ CCECBusDevice *CCECProcessor::GetDevice(cec_logical_address address) const
 
 cec_logical_address CCECProcessor::GetActiveSource(bool bRequestActiveSource /* = true */)
 {
+  //printf(">>>> arrived 900 <<<< \n");
   // get the device that is marked as active source from the device map
   CCECBusDevice *activeSource = m_busDevices->GetActiveSource();
   if (activeSource)
+  {  
+    //printf(">>>> arrived 900.1 <<<< \n");
     return activeSource->GetLogicalAddress();
-
+  }
+  
   if (bRequestActiveSource)
   {
+    //printf(">>>> arrived 900.2 <<<< \n");
     // request the active source from the bus
     CCECBusDevice *primary = GetPrimaryDevice();
     if (primary)
     {
+      //printf(">>>> arrived 900.3 <<<< \n");
       primary->RequestActiveSource();
       return GetActiveSource(false);
     }
   }
-
+  //printf(">>>> arrived 900.4 <<<< \n");
   // unknown or none
   return CECDEVICE_UNKNOWN;
 }
 
 bool CCECProcessor::IsActiveSource(cec_logical_address iAddress)
 {
+  //printf(">>>> arrived CCECProcessor::IsActiveSource \n");
   CCECBusDevice *device = m_busDevices->At(iAddress);
   return device && device->IsActiveSource();
 }
 
 bool CCECProcessor::Transmit(const cec_command &data, bool bIsReply)
 {
+
+  //printf(">>>> arrived 6 <<<< \n");
   cec_command transmitData(data);
   uint8_t iMaxTries(0);
   bool bRetry(true);
@@ -459,21 +471,30 @@ bool CCECProcessor::Transmit(const cec_command &data, bool bIsReply)
   cec_adapter_message_state adapterState = ADAPTER_MESSAGE_STATE_UNKNOWN;
 
   if (data.initiator == CECDEVICE_UNKNOWN && data.destination == CECDEVICE_UNKNOWN)
+  {
+    //printf(">>>> arrived 6.1 <<<< \n");
     return false;
+  }
 
   CLockObject lock(m_mutex);
   if (!m_communication)
+  {
+    //printf(">>>> arrived 6.2 <<<< \n");
     return false;
+  }
 
   if (!m_communication->SupportsSourceLogicalAddress(transmitData.initiator))
   {
+    //printf(">>>> arrived 6.3 <<<< \n");
     if (transmitData.initiator == CECDEVICE_UNREGISTERED && m_communication->SupportsSourceLogicalAddress(CECDEVICE_FREEUSE))
     {
+      //printf(">>>> arrived 6.4 <<<< \n");
       m_libcec->AddLog(CEC_LOG_DEBUG, "initiator '%s' is not supported by the CEC adapter. using '%s' instead", ToString(transmitData.initiator), ToString(CECDEVICE_FREEUSE));
       transmitData.initiator = CECDEVICE_FREEUSE;
     }
     else
     {
+      //printf(">>>> arrived 6.5 <<<< \n");
       m_libcec->AddLog(CEC_LOG_DEBUG, "initiator '%s' is not supported by the CEC adapter", ToString(transmitData.initiator));
       return false;
     }
@@ -485,6 +506,7 @@ bool CCECProcessor::Transmit(const cec_command &data, bool bIsReply)
   CCECBusDevice *initiator = m_busDevices->At(transmitData.initiator);
   if (!initiator)
   {
+    //printf(">>>> arrived 6.6 <<<< \n");
     m_libcec->AddLog(CEC_LOG_WARNING, "invalid initiator");
     return false;
   }
@@ -492,10 +514,12 @@ bool CCECProcessor::Transmit(const cec_command &data, bool bIsReply)
   // find the destination device, if it's not the broadcast address
   if (transmitData.destination != CECDEVICE_BROADCAST)
   {
+    //printf(">>>> arrived 6.7 <<<< \n");
     // check if the device is marked as handled by libCEC
     CCECBusDevice *destination = m_busDevices->At(transmitData.destination);
     if (destination && destination->IsHandledByLibCEC())
     {
+      //printf(">>>> arrived 6.8 <<<< \n");
       // and reject the command if it's trying to send data to a device that is handled by libCEC
       m_libcec->AddLog(CEC_LOG_WARNING, "not sending data to myself!");
       return false;
@@ -505,6 +529,7 @@ bool CCECProcessor::Transmit(const cec_command &data, bool bIsReply)
   // wait until we finished allocating a new LA if it got lost if this is not a poll
   if (data.opcode_set)
   {
+    //printf(">>>> arrived 6.9 <<<< \n");
     lock.Unlock();
     while (m_bStallCommunication) Sleep(5);
     lock.Lock();
@@ -518,8 +543,20 @@ bool CCECProcessor::Transmit(const cec_command &data, bool bIsReply)
   // and try to send the command
   while (bRetry && ++iTries < iMaxTries)
   {
+    //printf(">>>> arrived 6.a <<<< \n");
     if (initiator->IsUnsupportedFeature(transmitData.opcode))
+    {
+      //printf(">>>> arrived 6.b <<<< \n");
       return false;
+    }
+
+    //printf(">>>> -------------- arrived 6.b1 -------------------------- <<<< \n");
+    //printf(">>>> transmiData.initiator   = %i \n",transmitData.initiator);
+    //printf(">>>> transmiData.destination = %i \n",transmitData.destination);
+    //printf(">>>> transmiData.opcode      = %i \n",transmitData.opcode);
+    //printf(">>>> transmiData.parameters  = %i \n",transmitData.parameters);
+    //printf(">>>> transmiData.opcode_set  = %i \n",transmitData.opcode_set);
+    //printf(">>>> ------------------------------------------------------ <<<< \n");
 
     adapterState = !IsStopped() && m_communication && m_communication->IsOpen() ?
         m_communication->Write(transmitData, bRetry, iLineTimeout, bIsReply) :
@@ -527,6 +564,8 @@ bool CCECProcessor::Transmit(const cec_command &data, bool bIsReply)
     iLineTimeout = m_iRetryLineTimeout;
   }
 
+  //printf(">>>> arrived 6.c <<<< \n"); 
+  //printf(">>>> adapterState: %i \n", adapterState);
   return bIsReply ?
       adapterState == ADAPTER_MESSAGE_STATE_SENT_ACKED || adapterState == ADAPTER_MESSAGE_STATE_SENT || adapterState == ADAPTER_MESSAGE_STATE_WAITING_TO_BE_SENT :
       adapterState == ADAPTER_MESSAGE_STATE_SENT_ACKED;

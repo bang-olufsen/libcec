@@ -163,6 +163,7 @@ bool CLibCEC::IsLibCECActiveSource(void)
 
 bool CLibCEC::Transmit(const cec_command &data)
 {
+  //printf(">>>> arrived 8 <<<< \n");
   return m_client ? m_client->Transmit(data, false) : false;
 }
 
@@ -221,6 +222,11 @@ bool CLibCEC::SetOSDString(cec_logical_address iLogicalAddress, cec_display_cont
   return m_client ? m_client->SendSetOSDString(iLogicalAddress, duration, strMessage) : false;
 }
 
+bool CLibCEC::SendArcStart(cec_logical_address iLogicalAddress, int startOrEnd)
+{
+  return m_client ? m_client->SendSendArcStart(iLogicalAddress, startOrEnd) : false;
+}
+
 bool CLibCEC::SwitchMonitoring(bool bEnable)
 {
   return m_client ? m_client->SwitchMonitoring(bEnable) : false;
@@ -239,6 +245,90 @@ bool CLibCEC::GetDeviceMenuLanguage(cec_logical_address iAddress, cec_menu_langu
 uint32_t CLibCEC::GetDeviceVendorId(cec_logical_address iAddress)
 {
   return m_client ? m_client->GetDeviceVendorId(iAddress) : (uint32_t)CEC_VENDOR_UNKNOWN;
+}
+
+//HIB
+uint8_t CLibCEC::GetDeviceSystemAudioModeStatus(const cec_logical_address iAddress)
+{
+  return m_client ? m_client->GetDeviceSystemAudioModeStatus(iAddress) : (uint8_t)CEC_SYSTEM_AUDIO_STATUS_UNKNOWN;
+}
+
+//HIB
+uint8_t CLibCEC::GetDeviceAudioStatus(const cec_logical_address iAddress)
+{
+  return m_client ? m_client->GetDeviceAudioStatus(iAddress) : (uint8_t)CEC_AUDIO_VOLUME_STATUS_UNKNOWN;
+}
+
+//HIB
+uint32_t CLibCEC::DeviceRequestAudioDescriptor(const cec_logical_address iAddress, const uint8_t iAudioFormatIdCode)
+{
+  return m_client ? m_client->DeviceRequestAudioDescriptor(iAddress, iAudioFormatIdCode) : uint32_t(0xFFFFFFFF);
+}
+
+//HIB
+uint8_t CLibCEC::DeviceSystemAudioModeRequest(const cec_logical_address iAddress, uint16_t iPhysicalAddress, bool bAddPhysicalAddress)
+{
+  return m_client ? m_client->DeviceSystemAudioModeRequest(iAddress, iPhysicalAddress, bAddPhysicalAddress) : (uint8_t)CEC_SYSTEM_AUDIO_STATUS_UNKNOWN;
+}
+
+//HIB
+uint8_t CLibCEC::DeviceRequestArcTermination(const cec_logical_address iAddress)
+{
+  return m_client ? m_client->DeviceRequestArcTermination(iAddress) : (uint8_t)CEC_ARC_STATUS_UNKNOWN;
+}
+
+//HIB
+uint8_t CLibCEC::DeviceRequestArcInitiation(const cec_logical_address iAddress)
+{
+  return m_client ? m_client->DeviceRequestArcInitiation(iAddress) : (uint8_t)CEC_ARC_STATUS_UNKNOWN;
+}
+
+//HIB
+bool CLibCEC::DeviceReportArcTerminated(const cec_logical_address iAddress)
+{
+  return m_client ? m_client->DeviceReportArcTerminated(iAddress) : false;
+}
+
+//HIB
+bool CLibCEC::DeviceReportArcInitiated(const cec_logical_address iAddress)
+{
+  return m_client ? m_client->DeviceReportArcInitiated(iAddress) : false;
+}
+
+//HIB
+uint8_t CLibCEC::DeviceRequestArcInitiationWrongParam(const cec_logical_address iAddress, uint16_t iWrongParam)
+{
+  return m_client ? m_client->DeviceRequestArcInitiationWrongParam(iAddress, iWrongParam) : (uint8_t)CEC_ARC_STATUS_UNKNOWN;
+}
+
+//HIB
+uint8_t CLibCEC::DeviceUnsupportedOpcode(const cec_logical_address iAddress, cec_opcode opcode)
+{
+  return m_client ? m_client->DeviceUnsupportedOpcode(iAddress,opcode) : (uint8_t)CEC_FEATURE_ABORT_REASON_UNKNOWN;
+}
+
+//HIB
+uint8_t CLibCEC::DeviceStandby(const cec_logical_address iAddress, uint8_t initDest)
+{
+  return m_client ? m_client->DeviceStandby(iAddress, initDest) : 0xFD;
+}
+
+//HIB
+uint16_t CLibCEC::DeviceSetStreamPath(const cec_logical_address iAddress, const uint16_t iPhysicalAddress, const bool bUsePhysicalAddress)
+{
+  return m_client ? m_client->DeviceSetStreamPath(iAddress, iPhysicalAddress, bUsePhysicalAddress) : 65535;
+}
+
+//HIB
+uint16_t CLibCEC::DeviceRoutingChange(const cec_logical_address iAddress, const uint16_t iPhysicalAddressOriginal, const uint16_t iPhysicalAddressNew)
+{
+  return m_client ? m_client->DeviceRoutingChange(iAddress, iPhysicalAddressOriginal, iPhysicalAddressNew) : 65535;
+}
+
+//HIB
+uint16_t CLibCEC::DeviceRoutingInformation(const cec_logical_address iAddress, const uint16_t iPhysicalAddress)
+{
+  return m_client ? m_client->DeviceRoutingInformation(iAddress, iPhysicalAddress) : 65535;
 }
 
 uint16_t CLibCEC::GetDevicePhysicalAddress(cec_logical_address iAddress)
@@ -296,6 +386,12 @@ bool CLibCEC::SendKeypress(cec_logical_address iDestination, cec_user_control_co
   return m_client ? m_client->SendKeypress(iDestination, key, bWait) : false;
 }
 
+//HIB
+bool CLibCEC::SendKeypressWrongParam(cec_logical_address iDestination, cec_user_control_code key, uint8_t iWrongParam, bool NoParam, bool bWait /* = true */)
+{
+  return m_client ? m_client->SendKeypressWrongParam(iDestination, key, iWrongParam, NoParam, bWait) : false;
+}
+
 bool CLibCEC::SendKeyRelease(cec_logical_address iDestination, bool bWait /* = true */)
 {
   return m_client ? m_client->SendKeyRelease(iDestination, bWait) : false;
@@ -314,20 +410,24 @@ cec_osd_name CLibCEC::GetDeviceOSDName(cec_logical_address iAddress)
 
 cec_logical_address CLibCEC::GetActiveSource(void)
 {
+  //printf(">>>> arrived 1000 <<<< \n");
   return m_client ? m_client->GetActiveSource() : CECDEVICE_UNKNOWN;
 }
 
 bool CLibCEC::IsActiveSource(cec_logical_address iAddress)
 {
+  //printf(">>>> arrived CLibCEC::IsActiveSource \n");
   return m_client ? m_client->IsActiveSource(iAddress) : false;
 }
 bool CLibCEC::SetStreamPath(cec_logical_address iAddress)
 {
+  //printf(">>>> CLibCEC::SetStreamPath LOGICAL <<<< \n");
   return m_client ? m_client->SetStreamPath(iAddress) : false;
 }
 
 bool CLibCEC::SetStreamPath(uint16_t iPhysicalAddress)
 {
+  //printf(">>>> CLibCEC::SetStreamPath PHYSICAL <<<< \n");
   return m_client ? m_client->SetStreamPath(iPhysicalAddress) : false;
 }
 

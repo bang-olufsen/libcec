@@ -257,6 +257,8 @@ void CCECClient::SetPhysicalAddress(const libcec_configuration &configuration)
 bool CCECClient::SetPhysicalAddress(const uint16_t iPhysicalAddress)
 {
   // update the configuration
+
+  //printf(">>>> arrived CCECClient::SetPhysicalAddress #1 : %i", iPhysicalAddress)
   bool bChanged(true);
   {
     CLockObject lock(m_mutex);
@@ -506,6 +508,7 @@ bool CCECClient::SetLogicalAddress(const cec_logical_address iLogicalAddress)
 
 bool CCECClient::Transmit(const cec_command &data, bool bIsReply)
 {
+  //printf(">>>> arrived 5 <<<< \n");
   return m_processor ? m_processor->Transmit(data, bIsReply) : false;
 }
 
@@ -589,6 +592,7 @@ CCECPlaybackDevice *CCECClient::GetPlaybackDevice(void)
 
 cec_logical_address CCECClient::GetPrimaryLogicalAddress(void)
 {
+  //printf(">>>> arrived 10 <<<< \n");
   CLockObject lock(m_mutex);
   return m_configuration.logicalAddresses.primary;
 }
@@ -675,9 +679,22 @@ bool CCECClient::SendSetOSDString(const cec_logical_address iLogicalAddress, con
   return false;
 }
 
+bool CCECClient::SendSendArcStart(const cec_logical_address iLogicalAddress, int startOrEnd)
+{
+  CCECBusDevice *primary = GetPrimaryDevice();
+  CCECAudioSystem *audio = m_processor->GetAudioSystem();
+
+  if (primary && audio)
+    return audio->TransmitArcStartEnd(iLogicalAddress, startOrEnd);
+
+  return false;
+}
+
+
 cec_version CCECClient::GetDeviceCecVersion(const cec_logical_address iAddress)
 {
   CCECBusDevice *device = m_processor->GetDevice(iAddress);
+  //printf(">>>> arrived CCECClient::GetDeviceCecVersion <<<< \n ");
   if (device)
     return device->GetCecVersion(GetPrimaryLogicalAddress());
   return CEC_VERSION_UNKNOWN;
@@ -733,6 +750,312 @@ uint32_t CCECClient::GetDeviceVendorId(const cec_logical_address iAddress)
   if (device)
     return device->GetVendorId(GetPrimaryLogicalAddress());
   return CEC_VENDOR_UNKNOWN;
+}
+
+//HIB
+uint8_t CCECClient::GetDeviceSystemAudioModeStatus(const cec_logical_address iAddress)
+{
+  //CCECBusDevice *device = m_processor->GetDevice(iAddress);
+  //CECAudioSystem *device =  m_processor->GetDevice(iAddress);
+  CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  //printf(">>>> arrived 1 <<<< \n");
+  if (device)
+  {
+    //printf(">>>> arrived 1.1 <<<< \n");
+    return device->GetSystemAudioModeStatus(GetPrimaryLogicalAddress(),true);
+    //printf(">>>> arrived 1.2 <<<< \n");
+  }
+  return CEC_SYSTEM_AUDIO_STATUS_UNKNOWN;
+}
+
+//HIB
+uint8_t CCECClient::GetDeviceAudioStatus(const cec_logical_address iAddress)
+{
+  CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  //printf(">>>> arrived A1 CCECClient::GetDeviceAudioStatus <<<< \n");
+  if (device)
+  {
+    //printf(">>>> arrived A1.1 CCECClient::GetDeviceAudioStatus <<<< \n");
+    return device->GetAudioStatus(GetPrimaryLogicalAddress(),true);
+    //printf(">>>> arrived A1.2 CCECClient::GetDeviceAudioStatus <<<< \n");
+  }
+  return CEC_AUDIO_VOLUME_STATUS_UNKNOWN;
+}
+
+
+//HIB
+uint32_t CCECClient::DeviceRequestAudioDescriptor(const cec_logical_address iAddress, const uint8_t iAudioFormatIdCode)
+{
+  cec_logical_address iPrimaryLogicalAddress;
+
+  CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  iPrimaryLogicalAddress = GetPrimaryLogicalAddress();
+  //printf(">>>> #1 arrived CCECClient::DeviceRequestAudioDescriptor #1 <<<< \n");
+  if (device)
+  {
+    
+    //printf(">>>> #2 arrived CCECClient::DeviceRequestAudioDescriptor #2 <<<< Logical address: %i \n",iPrimaryLogicalAddress);
+    //printf(">>>> #3 arrived CCECClient::DeviceRequestAudioDescriptor #3 <<<< Physical address: %i \n",iAudioFormatIdCode);
+    return device->TestRequestAudioDescriptor(iPrimaryLogicalAddress,iAudioFormatIdCode,true);
+    //printf(">>>> #x arrived CCECClient::DeviceRequestAudioDescriptor #4 <<<< \n");
+  }
+  return 0xFF000011;
+}
+
+//HIB
+uint8_t CCECClient::DeviceSystemAudioModeRequest(const cec_logical_address iAddress, uint16_t iPhysicalAddress, bool bAddPhysicalAddress)
+{
+  cec_logical_address iPrimaryLogicalAddress;
+  //uint16_t iPhysicalAddress;
+  CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  iPrimaryLogicalAddress = GetPrimaryLogicalAddress();
+  //iPhysicalAddress = device->GetPhysicalAddress(iPrimaryLogicalAddress);
+  //printf(">>>> arrived B1 CCECClient::DeviceSystemAudioModeRequest <<<< \n");
+  if (device)
+  {
+    
+    //printf(">>>> arrived B1.1 CCECClient::DeviceSystemAudioModeRequest <<<< Logical address: %i \n",iPrimaryLogicalAddress);
+    //printf(">>>> arrived B1.1 CCECClient::DeviceSystemAudioModeRequest <<<< Physical address: %i \n",iPhysicalAddress);
+    //printf(">>>> arrived B1.1 CCECClient::DeviceSystemAudioModeRequest <<<< Add Physical address: %i \n",bAddPhysicalAddress);
+    
+    return device->TestSystemAudioModeRequest(iPrimaryLogicalAddress, iPhysicalAddress, bAddPhysicalAddress,true);
+    //printf(">>>> arrived B1.2 CCECClient::DeviceSystemAudioModeRequest <<<< \n");
+  }
+  return CEC_SYSTEM_AUDIO_STATUS_UNKNOWN;
+}
+
+//HIB
+uint8_t CCECClient::DeviceRequestArcTermination(const cec_logical_address iAddress)
+{
+  CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  //printf(">>>> arrived C1 CCECClient::DeviceRequestArcTermination <<<< \n");
+  if (device)
+  {
+    //printf(">>>> arrived C1.1 CCECClient::DeviceRequestArcTermination <<<< \n");
+    return device->TestRequestArcTermination(GetPrimaryLogicalAddress(),true);
+    //printf(">>>> arrived C1.2 CCECClient::DeviceRequestArcTermination <<<< \n");
+  }
+  //printf(">>>> arrived C1.3 CCECClient::DeviceRequestArcTermination <<<< \n");
+  return 11; CEC_ARC_STATUS_UNKNOWN;
+}
+
+//HIB
+uint8_t CCECClient::DeviceRequestArcInitiation(const cec_logical_address iAddress)
+{
+  CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  //printf(">>>> arrived D1 CCECClient::DeviceRequestArcInitiation <<<< \n");
+  if (device)
+  {
+    //printf(">>>> arrived D1.1 CCECClient::DeviceRequestArcInitiation <<<< \n");
+    return device->TestRequestArcInitiation(GetPrimaryLogicalAddress(),true);
+    //printf(">>>> arrived D1.2 CCECClient::DeviceRequestArcInitiation <<<< \n");
+  }
+  return CEC_ARC_STATUS_UNKNOWN;
+}
+
+//HIB
+bool CCECClient::DeviceReportArcTerminated(const cec_logical_address iAddress)
+{
+  CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  //printf(">>>> arrived CCECClient::DeviceReportArcTerminated #1 <<<< \n");
+  if (device)
+  {
+    //printf(">>>> arrived C1.1 CCECClient::DeviceReportArcTerminated #2 <<<< \n");
+    return device->TestReportArcTerminated(GetPrimaryLogicalAddress(),true);
+    //printf(">>>> arrived C1.2 CCECClient::DeviceReportArcTerminated #3 <<<< \n");
+  }
+  //printf(">>>> arrived C1.3 CCECClient::DeviceReportArcTerminated #4 <<<< \n");
+  return false;
+}
+
+//HIB
+bool CCECClient::DeviceReportArcInitiated(const cec_logical_address iAddress)
+{
+  CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  //printf(">>>> arrived CCECClient::DeviceReportArcInitiated #1 <<<< \n");
+  if (device)
+  {
+    //printf(">>>> arrived D1.1 CCECClient::DeviceReportArcInitiated #2 <<<< \n");
+    return device->TestReportArcInitiated(GetPrimaryLogicalAddress(),true);
+    //printf(">>>> arrived D1.2 CCECClient::DeviceReportArcInitiated #3 <<<< \n");
+  }
+  return false;
+}
+
+//HIB
+uint8_t CCECClient::DeviceRequestArcInitiationWrongParam(const cec_logical_address iAddress, uint16_t iWrongParam)
+{
+  CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  //printf(">>>> arrived D1 CCECClient::DeviceRequestArcInitiation <<<< \n");
+  if (device)
+  {
+    //printf(">>>> arrived D1.1 CCECClient::DeviceRequestArcInitiation <<<< \n");
+    return device->TestRequestArcInitiationWrongParam(GetPrimaryLogicalAddress(),iWrongParam,true);
+    //printf(">>>> arrived D1.2 CCECClient::DeviceRequestArcInitiation <<<< \n");
+  }
+  return CEC_ARC_STATUS_UNKNOWN;
+}
+
+//HIB
+uint8_t CCECClient::DeviceUnsupportedOpcode(const cec_logical_address iAddress, cec_opcode opcode)
+{
+  CCECBusDevice *device = m_processor->GetDevice(iAddress);
+  //CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  //printf(">>>> arrived CCECClient::DeviceUnsupportedOpcode #1 <<<< \n");
+  if (device)
+  {
+    //printf(">>>> arrived CCECClient::DeviceUnsupportedOpcode #2 <<<< \n");
+    return device->TestUnsupportedOpcode(GetPrimaryLogicalAddress(), opcode, true);
+    //printf(">>>> arrived CCECClient::DeviceUnsupportedOpcode #3 <<<< \n");
+  }
+  return CEC_FEATURE_ABORT_REASON_UNKNOWN;
+}
+
+//HIB
+uint8_t CCECClient::DeviceStandby(const cec_logical_address iAddress, uint8_t initDest)
+{
+  CCECBusDevice *device = m_processor->GetDevice(iAddress);
+  
+  //printf(">>>> arrived CCECClient::DeviceStandby #1 <<<< \n");
+  if (device)
+  {
+    //printf(">>>> arrived CCECClient::DeviceStandby #2 <<<< \n");
+    return device->TestStandby(GetPrimaryLogicalAddress(), initDest, true);
+    //printf(">>>> arrived CCECClient::DeviceStandby #3 <<<< \n");
+  }
+  return 0xFE;
+}
+
+//HIB
+uint16_t CCECClient::DeviceSetStreamPath(const cec_logical_address iAddress, const uint16_t iPhysicalAddress, const bool bUsePhysicalAddress)
+{
+  cec_logical_address iPrimaryLogicalAddress;
+  //uint16_t iPhysicalAddress;
+  uint16_t iPhysicalAddress2;
+  
+  
+  CCECBusDevice *device = m_processor->GetDevice(iAddress);
+  //CCECAudioSystem *device = CCECBusDevice::AsAudioSystem(m_processor->GetDevice(iAddress));
+  
+  iPrimaryLogicalAddress = GetPrimaryLogicalAddress();
+  //iPhysicalAddress = 0x2200; //device->GetPhysicalAddress(iPrimaryLogicalAddress);
+  
+  if (bUsePhysicalAddress)
+  {
+    iPhysicalAddress2 = iPhysicalAddress;
+  }
+  else
+  {
+    iPhysicalAddress2 = device->GetPhysicalAddress(iAddress);
+  }
+  // CECDEVICE_BROADCAST
+
+  //printf(">>>> arrived CCECClient::DeviceSetStreamPath #1 <<<< \n");
+  //printf(">>>> iAddress: %i \n", iAddress);
+  //printf(">>>> PrimaryLogicalAddress: %i \n", iPrimaryLogicalAddress);
+  //printf(">>>> PhysicalAddress: %i \n", iPhysicalAddress);
+  //printf(">>>> PhysicalAddress2: %i \n", iPhysicalAddress2);
+  //printf(">>>>> -------------------------------------------------------\n");
+
+  if (device)
+  {
+    //printf(">>>> arrived CCECClient::DeviceSetStreamPath #2 <<<< \n");
+    return device->TestSetStreamPath(iPrimaryLogicalAddress,iPhysicalAddress2, true);
+    //printf(">>>> arrived CCECClient::DeviceSetStreamPath #3 <<<< \n");
+  }
+  return CEC_STREAM_PATH_RESPONSE_UNKNOWN;
+}
+
+//HIB
+uint16_t CCECClient::DeviceRoutingChange(const cec_logical_address iAddress,
+                                         const uint16_t iPhysicalAddressOriginal,
+                                         const uint16_t iPhysicalAddressNew)
+{
+  cec_logical_address iPrimaryLogicalAddress;
+  uint16_t iPhysAddrOriginal;
+  uint16_t iPhysAddrNew;
+
+  CCECBusDevice *device = m_processor->GetDevice(iAddress);
+  
+  iPrimaryLogicalAddress = GetPrimaryLogicalAddress();
+  //printf(">>>> arrived CCECClient::DeviceRoutingChange #0 <<<< \n");
+  //iPhysAddrNew = device->GetPhysicalAddress(iAddress);
+   
+  //if (iPhysAddrNew == 0x1000)
+  //{
+  //  iPhysAddrOriginal = 0x2000;
+  //}
+  //else
+  //{
+  //  iPhysAddrOriginal = 0x1000;
+  //}
+
+  iPhysAddrOriginal = iPhysicalAddressOriginal;
+  iPhysAddrNew = iPhysicalAddressNew;
+
+  //printf(">>>> arrived CCECClient::DeviceRoutingChange #1 <<<< \n");
+  //printf(">>>> iAddress             : %i \n", iAddress);
+  //printf(">>>> PrimaryLogicalAddress: %i \n", iPrimaryLogicalAddress);
+  //printf(">>>> PhysAddrOriginal     : %i \n", iPhysAddrOriginal);
+  //printf(">>>> PhysAddrNew          : %i \n", iPhysAddrNew);
+  //printf(">>>> -------------------------------------------------------\n");
+
+  if (device)
+  {
+    //printf(">>>> arrived CCECClient::DeviceRoutingChange #2 <<<< \n");
+    return device->TestRoutingChange(iPrimaryLogicalAddress,iPhysAddrOriginal,iPhysAddrNew, true);
+    //printf(">>>> arrived CCECClient::DeviceRoutingChange #3 <<<< \n");
+  }
+  return CEC_STREAM_PATH_RESPONSE_UNKNOWN;
+}
+
+//HIB
+uint16_t CCECClient::DeviceRoutingInformation(const cec_logical_address iAddress, const uint16_t iPhysicalAddress)
+{
+  cec_logical_address iPrimaryLogicalAddress;
+  uint16_t iPhysAddr;
+
+  CCECBusDevice *device = m_processor->GetDevice(iAddress);
+  
+  iPrimaryLogicalAddress = GetPrimaryLogicalAddress();
+  //printf(">>>> arrived CCECClient::DeviceRoutingInformation #0 <<<< \n");
+  //iPhysAddrNew = device->GetPhysicalAddress(iAddress);
+   
+  //if (iPhysAddrNew == 0x1000)
+  //{
+  //  iPhysAddrOriginal = 0x2000;
+  //}
+  //else
+  //{
+  //  iPhysAddrOriginal = 0x1000;
+  //}
+
+  iPhysAddr = iPhysicalAddress;
+
+  //printf(">>>> arrived CCECClient::DeviceRoutingInformation #1 <<<< \n");
+  //printf(">>>> iAddress             : %i \n", iAddress);
+  //printf(">>>> PrimaryLogicalAddress: %i \n", iPrimaryLogicalAddress);
+  //printf(">>>> PhysAddrOriginal     : %i \n", iPhysAddrOriginal);
+  //printf(">>>> PhysAddrNew          : %i \n", iPhysAddrNew);
+  //printf(">>>> -------------------------------------------------------\n");
+
+  if (device)
+  {
+    //printf(">>>> arrived CCECClient::DeviceRoutingInformation #2 <<<< \n");
+    return device->TestRoutingInformation(iPrimaryLogicalAddress,iPhysAddr, true);
+    //printf(">>>> arrived CCECClient::DeviceRoutingInformation #3 <<<< \n");
+  }
+  return CEC_STREAM_PATH_RESPONSE_UNKNOWN;
 }
 
 uint8_t CCECClient::SendVolumeUp(bool bSendRelease /* = true */)
@@ -810,6 +1133,16 @@ bool CCECClient::SendKeypress(const cec_logical_address iDestination, const cec_
 
   return dest ?
       dest->TransmitKeypress(GetPrimaryLogicalAddress(), key, bWait) :
+      false;
+}
+
+//HIB
+bool CCECClient::SendKeypressWrongParam(const cec_logical_address iDestination, const cec_user_control_code key, uint8_t iWrongParam, bool bNoParam, bool bWait /* = true */)
+{
+  CCECBusDevice *dest = m_processor->GetDevice(iDestination);
+
+  return dest ?
+      dest->TransmitKeypressWrongParam(GetPrimaryLogicalAddress(), key, iWrongParam, bNoParam, bWait) :
       false;
 }
 
@@ -1456,8 +1789,10 @@ bool CCECClient::PollDevice(const cec_logical_address iAddress)
   CCECBusDevice *primary = GetPrimaryDevice();
   // poll the destination, with the primary as source
   if (primary)
+    //printf(">>>> arrived CCECClient::PollDevice #1 <<<< \n");
     return primary->TransmitPoll(iAddress, true);
 
+  //printf(">>>> arrived CCECClient::PollDevice #2 <<<< \n");
   return m_processor ? m_processor->PollDevice(iAddress) : false;
 }
 
@@ -1486,17 +1821,20 @@ bool CCECClient::IsActiveDeviceType(const cec_device_type type)
 
 cec_logical_address CCECClient::GetActiveSource(void)
 {
+  //printf(">>>> arrived CCECClient::GetActiveSource <<<< \n");
   return m_processor ? m_processor->GetActiveSource() : CECDEVICE_UNKNOWN;
 }
 
 bool CCECClient::IsActiveSource(const cec_logical_address iAddress)
 {
+  //printf(">>>> arrived CCECClient::IsActiveSource \n");
   return m_processor ? m_processor->IsActiveSource(iAddress) : false;
 }
 
 bool CCECClient::SetStreamPath(const cec_logical_address iAddress)
 {
   uint16_t iPhysicalAddress = GetDevicePhysicalAddress(iAddress);
+  //printf(">>>> CCECClient::SetStreamPath LOGICAL <<<< \n");
   if (iPhysicalAddress != CEC_INVALID_PHYSICAL_ADDRESS)
     return SetStreamPath(iPhysicalAddress);
   return false;
@@ -1505,19 +1843,21 @@ bool CCECClient::SetStreamPath(const cec_logical_address iAddress)
 bool CCECClient::SetStreamPath(const uint16_t iPhysicalAddress)
 {
   bool bReturn(false);
-
+  //printf(">>>> CCECClient::SetStreamPath PHYSICAL #1 <<<< \n");
   CCECBusDevice *device = GetDeviceByType(CEC_DEVICE_TYPE_TV);
   if (device)
   {
+    //printf(">>>> CCECClient::SetStreamPath PHYSICAL #2 <<<< \n");
     device->SetStreamPath(iPhysicalAddress);
     bReturn = device->GetHandler()->TransmitSetStreamPath(iPhysicalAddress, false);
     device->MarkHandlerReady();
   }
   else
   {
+    //printf(">>>> CCECClient::SetStreamPath PHYSICAL #3 <<<< \n");
     LIB_CEC->AddLog(CEC_LOG_ERROR, "only the TV is allowed to send CEC_OPCODE_SET_STREAM_PATH");
   }
-
+  //printf(">>>> CCECClient::SetStreamPath PHYSICAL <<<< #4 \n");
   return bReturn;
 }
 
@@ -1722,7 +2062,7 @@ bool CCECClient::AudioEnable(bool enable)
 {
   CCECBusDevice* device = enable ? GetPrimaryDevice() : nullptr;
   CCECAudioSystem* audio = m_processor->GetAudioSystem();
-
+  //printf(">>>> arrived B111 <<<< \n");
   return !!audio ?
       audio->EnableAudio(device) :
       false;
