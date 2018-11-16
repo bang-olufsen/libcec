@@ -46,8 +46,8 @@ class pyCecClient:
     self.cecconfig.strDeviceName   = "pyLibCec"
     self.cecconfig.bActivateSource = 0
     #self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
-    #self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_PLAYBACK_DEVICE)
-    self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_TV)
+    self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_PLAYBACK_DEVICE)
+    #self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_TV)
     #self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_TUNER)
     #self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_AUDIO_SYSTEM)
     self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
@@ -60,16 +60,16 @@ class pyCecClient:
 
   # detect an adapter and return the com port path
   def DetectAdapter(self):
-    #retval = [] #None
+    retval = None
     adapters = self.lib.DetectAdapters()
     for adapter in adapters:
       print("found a CEC adapter:")
       print("port:     " + adapter.strComName)
       print("vendor:   " + hex(adapter.iVendorId))
       print("product:  " + hex(adapter.iProductId))
-      #retval = adapter.strComName
-    adaptername = "/dev/ttyACM0"
-    retval = adaptername
+      retval = adapter.strComName
+    #adaptername = "/dev/ttyACM0"
+    #retval = adaptername
     return retval
 
   # initialise libCEC
@@ -79,24 +79,7 @@ class pyCecClient:
     print("libCEC version " + self.lib.VersionToString(self.cecconfig.serverVersion) + " loaded: " + self.lib.GetLibInfo())
 
     # search for adapters
-#    adapters = self.DetectAdapter()
-#    print adapters
-#    connected_one = False
-#    for adapter in adapters:
-#      if adapter is None:
-#        print("No adapters found")
-#      else:
-#        if (self.lib.Open(adapter) and (not (connected_one))):
-#          print("connection opened" + adapter)
-#          connected_one = True
-#          self.MainLoop()
-#        else:
-#          print("failed to open a connection to the CEC adapter " + adapter)
-
-
-    # search for adapters
-    #adapter = self.DetectAdapter()
-    adapter = "/dev/ttyACM0"
+    adapter = self.DetectAdapter()
     if adapter == None:
       print("No adapters found")
     else:
@@ -162,15 +145,15 @@ class pyCecClient:
         cecVersion      = self.lib.GetDeviceCecVersion(x)
         power           = self.lib.GetDevicePowerStatus(x)
         osdName         = self.lib.GetDeviceOSDName(x)
-        print "=========================================="
-        print "Device logical addr -", x
-        print "Physical address     ", physicalAddress
-        print "Active source -------", active
-        print "VendorID             ", vendorId
-        print "CEC version ---------", cecVersion
-        print "OSD name             ", osdName
-        print "Power status --------", power
-        print ""
+        print("==========================================")
+        print("Device logical addr -" + str(x))
+        print("Physical address     " + str(physicalAddress))
+        print("Active source -------" + str(active))
+        print("VendorID             " + str(vendorId))
+        print("CEC version ---------" + str(cecVersion))
+        print("OSD name             " + str(osdName))
+        print("Power status --------" + str(power))
+        print("")
         strLog += "device #" + str(x) +": " + self.lib.LogicalAddressToString(x)  + "\n"
         strLog += "address:       " + str(physicalAddress) + "\n"
         strLog += "active source: " + str(active) + "\n"
@@ -185,7 +168,7 @@ class pyCecClient:
   def MainLoop(self):
     runLoop = True
     while runLoop:
-      command = raw_input("Enter command:").lower()
+      command = input("Enter command:").lower()
       if command == 'q' or command == 'quit':
         runLoop = False
       elif command == 'self':
