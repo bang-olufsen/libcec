@@ -791,6 +791,8 @@ typedef enum cec_opcode
   CEC_OPCODE_SYSTEM_AUDIO_MODE_STATUS      = 0x7E,
   CEC_OPCODE_SET_AUDIO_RATE                = 0x9A,
 
+  CEC_CMD_REPORT_AUDIO_DESCRIPTOR = 0xA3,
+  CEC_CMD_REQUEST_AUDIO_DESCRIPTOR = 0xA4,
   /* CEC 1.4 */
   CEC_OPCODE_START_ARC                     = 0xC0,
   CEC_OPCODE_REPORT_ARC_STARTED            = 0xC1,

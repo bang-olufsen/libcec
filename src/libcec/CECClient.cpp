@@ -970,7 +970,7 @@ void CCECClient::AddCommand(const cec_command &command)
 
   if (command.destination == CECDEVICE_BROADCAST || GetLogicalAddresses().IsSet(command.destination))
   {
-    LIB_CEC->AddLog(CEC_LOG_DEBUG, ">> %s (%X) -> %s (%X): %s (%2X)", ToString(command.initiator), command.initiator, ToString(command.destination), command.destination, ToString(command.opcode), command.opcode);
+    //LIB_CEC->AddLog(CEC_LOG_DEBUG, ">> %s (%X) -> %s (%X): %s (%2X)", ToString(command.initiator), command.initiator, ToString(command.destination), command.destination, ToString(command.opcode), command.opcode);
     CallbackAddCommand(command);
   }
 }

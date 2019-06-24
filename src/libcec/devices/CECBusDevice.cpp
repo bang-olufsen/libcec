@@ -965,7 +965,7 @@ void CCECBusDevice::HandlePoll(const cec_logical_address destination)
 
 void CCECBusDevice::HandlePollFrom(const cec_logical_address initiator)
 {
-  LIB_CEC->AddLog(CEC_LOG_DEBUG, "<< POLL: %s (%x) -> %s (%x)", ToString(initiator), initiator, ToString(m_iLogicalAddress), m_iLogicalAddress);
+  //LIB_CEC->AddLog(CEC_LOG_DEBUG, "<< POLL: %s (%x) -> %s (%x)", ToString(initiator), initiator, ToString(m_iLogicalAddress), m_iLogicalAddress);
   m_bAwaitingReceiveFailed = true;
 }
 

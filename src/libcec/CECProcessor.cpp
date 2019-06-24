@@ -547,7 +547,9 @@ void CCECProcessor::TransmitAbort(cec_logical_address source, cec_logical_addres
 void CCECProcessor::ProcessCommand(const cec_command &command)
 {
   // log the command
-  m_libcec->AddLog(CEC_LOG_TRAFFIC, ToString(command).c_str());
+  if (command.opcode_set && command.opcode != CEC_OPCODE_DEVICE_VENDOR_ID) {
+    m_libcec->AddLog(CEC_LOG_TRAFFIC, "%s \t\t %s", ToString(command).c_str(), ToString(command.opcode));
+  }
 
   // find the initiator
   CCECBusDevice *device = m_busDevices->At(command.initiator);
